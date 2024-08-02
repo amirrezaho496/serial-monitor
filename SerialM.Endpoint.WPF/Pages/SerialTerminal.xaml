@@ -1,0 +1,100 @@
+﻿<Page x:Class="SerialM.Endpoint.WPF.Pages.SerialTerminal"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:SerialM.Endpoint.WPF.Pages"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="SerialTerminal">
+
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="293*"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="59*" MinHeight="60"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+
+        </Grid.ColumnDefinitions>
+
+        <DockPanel >
+            <Button x:Name="ConnectButton" DockPanel.Dock="Right" Content="Connect" Click="ConnectButton_Click" VerticalAlignment="Stretch" Margin="10,0,10,0" HorizontalAlignment="Stretch"/>
+            <WrapPanel Grid.Row="1"  Height="auto">
+                <!-- Port Selection -->
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Port:" VerticalAlignment="Center" Margin="5,0,5,0" Height="26"/>
+                    <ComboBox x:Name="PortComboBox" Grid.Row="1" Grid.Column="1" Margin="5,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="30"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+
+                    <!-- Baud Rate Selection -->
+                    <Label Content="Baud Rate:" VerticalAlignment="Center" Margin="5,0,5,0" Height="26"/>
+                    <ComboBox x:Name="BaudRateComboBox" Margin="5,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="30"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+
+                    <!-- Baud Rate Selection -->
+                    <Label Content="Parity:" VerticalAlignment="Center" Margin="5,0,5,0" Height="26" Grid.ColumnSpan="2"/>
+                    <ComboBox x:Name="ParityComboBox" Margin="5,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="30"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+
+                    <!-- Stop Bits Selection -->
+                    <Label Content="Stop Bits:" VerticalAlignment="Center" Margin="5,0,5,0" Height="26" Grid.ColumnSpan="2"/>
+                    <ComboBox x:Name="StopBitComboBox" Margin="5,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="30"/>
+                </StackPanel>
+
+            </WrapPanel>
+        </DockPanel>
+        <!-- Connect/Disconnect Button -->
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Data Display Area -->
+            <RichTextBox x:Name="DataTextBox" Grid.Column="0"  Grid.ColumnSpan="1" Margin="10,5,10,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
+                <RichTextBox.Resources>
+                    <Style TargetType="{x:Type Paragraph}">
+                        <Setter Property="Margin" Value="0"/>
+                    </Style>
+                </RichTextBox.Resources>
+            </RichTextBox>
+
+            <RichTextBox x:Name="HexDataTextBox" Grid.Column="1" Grid.ColumnSpan="1" Margin="10,5,10,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
+                <RichTextBox.Resources>
+                    <Style TargetType="{x:Type Paragraph}">
+                        <Setter Property="Margin" Value="0"/>
+                    </Style>
+                </RichTextBox.Resources>
+            </RichTextBox>
+        </Grid>
+
+
+        <Grid Grid.Row="2" Grid.ColumnSpan="7" Margin="10,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox Content="HEX" x:Name="HEX_checkbox" Grid.Column="0" Margin="5" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Unchecked="HEX_checkbox_Checked" Checked="HEX_checkbox_Checked"/>
+            <CheckBox Content="Scroll to End" x:Name="Scroll_checkbox" Grid.Column="1" Margin="5" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Unchecked="Scroll_checkbox_Checked" Checked="Scroll_checkbox_Checked"/>
+        </Grid>
+
+        <!-- Data Entry Area -->
+        <TextBox x:Name="InputTextBox" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="10"
+                 Margin="10,10,10,10"
+                 KeyDown="InputTextBox_KeyDown" MinHeight="33"
+                 PreviewKeyDown="TextBox_PreviewKeyDown"
+                 AcceptsReturn="True"/>
+    </Grid>
+</Page>

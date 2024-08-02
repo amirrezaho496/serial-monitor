@@ -1,0 +1,35 @@
+﻿<Application x:Class="SerialM.Endpoint.WPF.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:SerialM.Endpoint.WPF"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemeResources CanBeAccessedAcrossThreads="True">
+                    <ui:ThemeResources.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light">
+                            <ResourceDictionary.MergedDictionaries>
+                                <ui:ColorPaletteResources TargetTheme="Light" Accent="Black" AltHigh="#FFF6F6F6" />
+                            </ResourceDictionary.MergedDictionaries>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Dark">
+                            <ResourceDictionary.MergedDictionaries>
+                                <ui:ColorPaletteResources TargetTheme="Dark"  Accent="White" AltHigh="#FF1F1F1F" />
+                            </ResourceDictionary.MergedDictionaries>
+                        </ResourceDictionary>
+
+                        <!--<ResourceDictionary x:Key="Blue">
+                            <ResourceDictionary.MergedDictionaries>
+                                <ui:ColorPaletteResources TargetTheme="Blue" Accent="White" />
+                            </ResourceDictionary.MergedDictionaries>
+                        </ResourceDictionary>-->
+                    </ui:ThemeResources.ThemeDictionaries>
+                </ui:ThemeResources>
+                <ui:XamlControlsResources />
+                <ui:IntellisenseResources Source="/ModernWpf;component/DesignTime/DesignTimeResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
