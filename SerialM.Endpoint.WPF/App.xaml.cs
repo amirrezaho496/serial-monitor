@@ -1,6 +1,8 @@
-﻿using System.Configuration;
+﻿using ModernWpf;
+using System.Configuration;
 using System.Data;
 using System.Windows;
+using System.Windows.Media;
 
 namespace SerialM.Endpoint.WPF
 {
@@ -9,6 +11,9 @@ namespace SerialM.Endpoint.WPF
     /// </summary>
     public partial class App : Application
     {
+        public App()
+        {
+        }
     }
 
 }

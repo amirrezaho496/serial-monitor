@@ -6,17 +6,47 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
+
+            <Style x:Key="DefaultTextStyle" TargetType="Span">
+                <Setter Property="Foreground" Value="{DynamicResource DefaultTextColor}"/>
+            </Style>
+            <Style x:Key="SuccessStyle" TargetType="Span">
+                <Setter Property="Foreground" Value="{DynamicResource SuccessColor}" />
+                <Setter Property="FontStyle" Value="Oblique"/>
+            </Style>
+            <Style x:Key="FailStyle" TargetType="Span">
+                <Setter Property="Foreground" Value="{DynamicResource FailColor}" />
+                <Setter Property="TextBlock.FontStyle" Value="Oblique"/>
+            </Style>
+            <Style x:Key="InfoStyle" TargetType="Span">
+                <Setter Property="Foreground" Value="{DynamicResource InfoColor}" />
+            </Style>
+            <Style x:Key="ReceiveStyle" TargetType="Span">
+                <Setter Property="Foreground" Value="{DynamicResource ReceiveColor}" />
+            </Style>
+            <Style x:Key="SentStyle" TargetType="Span">
+                <Setter Property="Foreground" Value="{DynamicResource SentColor}" />
+            </Style>
+            <!--<SolidColorBrush x:Key="DefaultTextColor" Color="{DynamicResource DefaultTextColor}"/>
+            <SolidColorBrush x:Key="SuccessColor" Color="{DynamicResource SuccessColor}"/>
+            <SolidColorBrush x:Key="FailColor" Color="{DynamicResource FailColor}"/>
+            <SolidColorBrush x:Key="InfoColor" Color="{DynamicResource InfoColor}"/>
+            <SolidColorBrush x:Key="ReceiveColor" Color="{DynamicResource ReceiveColor}"/>
+            <SolidColorBrush x:Key="SentColor" Color="{DynamicResource SentColor}"/>-->
+
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemeResources CanBeAccessedAcrossThreads="True">
                     <ui:ThemeResources.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">
                             <ResourceDictionary.MergedDictionaries>
+                                <ui:ResourceDictionaryEx Source="pack://application:,,,/Themes/LightTheme.xaml"/>
                                 <ui:ColorPaletteResources TargetTheme="Light" Accent="Black" AltHigh="#FFF6F6F6" />
                             </ResourceDictionary.MergedDictionaries>
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="Dark">
                             <ResourceDictionary.MergedDictionaries>
-                                <ui:ColorPaletteResources TargetTheme="Dark"  Accent="White" AltHigh="#FF1F1F1F" />
+                                <ui:ResourceDictionaryEx Source="pack://application:,,,/Themes/DarkTheme.xaml"/>
+                                <ui:ColorPaletteResources TargetTheme="Dark"  Accent="White" AltHigh="#FF1F1F1F"/>
                             </ResourceDictionary.MergedDictionaries>
                         </ResourceDictionary>
 

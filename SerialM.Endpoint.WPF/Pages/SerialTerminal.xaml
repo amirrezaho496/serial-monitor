@@ -8,13 +8,13 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="SerialTerminal">
 
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="293*"/>
             <RowDefinition Height="40"/>
             <RowDefinition Height="59*" MinHeight="60"/>
+            <RowDefinition Height="20"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
 
@@ -55,12 +55,13 @@
         <!-- Connect/Disconnect Button -->
         <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition />
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
             <!-- Data Display Area -->
-            <RichTextBox x:Name="DataTextBox" Grid.Column="0"  Grid.ColumnSpan="1" Margin="10,5,10,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
+            <RichTextBox x:Name="DataTextBox" Grid.Column="0"  Grid.ColumnSpan="1" Margin="10,5,2,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
                 <RichTextBox.Resources>
                     <Style TargetType="{x:Type Paragraph}">
                         <Setter Property="Margin" Value="0"/>
@@ -68,13 +69,27 @@
                 </RichTextBox.Resources>
             </RichTextBox>
 
-            <RichTextBox x:Name="HexDataTextBox" Grid.Column="1" Grid.ColumnSpan="1" Margin="10,5,10,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
-                <RichTextBox.Resources>
-                    <Style TargetType="{x:Type Paragraph}">
-                        <Setter Property="Margin" Value="0"/>
-                    </Style>
-                </RichTextBox.Resources>
-            </RichTextBox>
+            <GridSplitter Grid.Row="0" Grid.Column="1" Margin="5" Padding="5"
+                  Width="3" Background="{DynamicResource DefaultTextColor}" 
+                  VerticalAlignment="Stretch" 
+                  HorizontalAlignment="Center" />
+
+            <Grid Grid.Column="3" Grid.ColumnSpan="1" >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+                <Label Content="Hex:" Grid.Row="0"/>
+                <RichTextBox Grid.Row="1" x:Name="HexDataTextBox"  Margin="2,5,10,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
+                    <RichTextBox.Resources>
+                        <Style TargetType="{x:Type Paragraph}">
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </RichTextBox.Resources>
+                </RichTextBox>
+                <Button Grid.Row="2" x:Name="ToHex_button" Content="To Hex the Selection" Click="ToHex_button_Click"/>
+            </Grid>
         </Grid>
 
 
@@ -96,5 +111,8 @@
                  KeyDown="InputTextBox_KeyDown" MinHeight="33"
                  PreviewKeyDown="TextBox_PreviewKeyDown"
                  AcceptsReturn="True"/>
+        <StatusBar Grid.Row="4" Grid.RowSpan="1">
+            <ProgressBar  x:Name="mainSbar" Minimum="0" Maximum="100" Value="0"  Margin="10,0,10,0" Width="100" Height="10" HorizontalAlignment="Left" VerticalAlignment="center"/>
+        </StatusBar>
     </Grid>
 </Page>

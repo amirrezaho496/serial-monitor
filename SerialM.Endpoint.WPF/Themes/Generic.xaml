@@ -16,13 +16,13 @@
                     <ControlTemplate.Triggers>
 
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" TargetName="back" Value="#d0ebff"/>
-                            <Setter Property="Fill" TargetName="icon" Value="#2a84f1"/>
+                            <Setter Property="Background" TargetName="back" Value="{DynamicResource ListboxMouseoverBack}"/>
+                            <Setter Property="Fill" TargetName="icon" Value="{DynamicResource ListboxMouseoverFill}"/>
                         </Trigger>
 
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" TargetName="back" Value="#d0ebff"/>
-                            <Setter Property="Fill" TargetName="icon" Value="#2a84f1"/>
+                            <Setter Property="Background" TargetName="back" Value="{DynamicResource ListboxSelectedBack}"/>
+                            <Setter Property="Fill" TargetName="icon" Value="{DynamicResource ListboxSelectedFill}"/>
                         </Trigger>
 
                     </ControlTemplate.Triggers>

@@ -1,0 +1,25 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+
+    <Style x:Key="DefaultTextStyle" TargetType="Span">
+        <Setter Property="Foreground" Value="{DynamicResource DefaultTextColor}"/>
+    </Style>
+    <Style x:Key="SuccessStyle" TargetType="Span">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessColor}" />
+        <Setter Property="FontStyle" Value="Oblique"/>
+    </Style>
+    <Style x:Key="FailStyle" TargetType="Span">
+        <Setter Property="Foreground" Value="{DynamicResource FailColor}" />
+        <Setter Property="TextBlock.FontStyle" Value="Italic"/>
+    </Style>
+    <Style x:Key="InfoStyle" TargetType="Span">
+        <Setter Property="Foreground" Value="{DynamicResource InfoColor}" />
+    </Style>
+    <Style x:Key="ReceiveStyle" TargetType="Span">
+        <Setter Property="Foreground" Value="{DynamicResource ReceiveColor}" />
+    </Style>
+    <Style x:Key="SentStyle" TargetType="Span">
+        <Setter Property="Foreground" Value="{DynamicResource SentColor}" />
+    </Style>
+</ResourceDictionary>

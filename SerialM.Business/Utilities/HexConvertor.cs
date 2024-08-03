@@ -28,6 +28,7 @@ namespace SerialM.Business.Utilities
             byte[] byteArray = new byte[value.Length / 2];
             for (int i = 0; i < byteArray.Length; i++)
             {
+                var sub = value.Substring(i * 2, 2);
                 byteArray[i] = Convert.ToByte(value.Substring(i * 2, 2), 16);
             }
 

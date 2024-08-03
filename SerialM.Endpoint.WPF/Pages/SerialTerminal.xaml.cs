@@ -25,16 +25,33 @@ namespace SerialM.Endpoint.WPF.Pages
     public partial class SerialTerminal : Page
     {
         private static SerialPort _serialPort;
-        private Color? _default = ThemeManager.Current.AccentColor,
-            _success = ThemeManager.Current.AccentColor,
-            _fail = ThemeManager.Current.AccentColor,
-            _info = ThemeManager.Current.AccentColor,
-            _receive = ThemeManager.Current.AccentColor,
-            _sent = ThemeManager.Current.AccentColor;
+        //private string _default = "DefaultTextColor",
+        //    _success = "SuccessColor",
+        //    _fail = "FailColor",
+        //    _info = "InfoColor",
+        //    _receive = "ReceiveColor",
+        //    _sent = "SentColor";
+
+        private string _default = "DefaultTextStyle",
+            _success = "SuccessStyle",
+            _fail = "FailStyle",
+            _info = "InfoStyle",
+            _receive = "ReceiveStyle",
+            _sent = "SentStyle";
+
+
         private System.Timers.Timer _portCheckTimer;
         private string[] _lastKnownPorts;
 
         private bool _scrollToEnd = false, _hexText = false;
+
+        private List<Run> _textRanges = new();
+        private Paragraph mainParagraph = new();
+
+        public List<Run> TextRanges
+        {
+            get => _textRanges;
+        }
 
         public SerialTerminal()
         {
@@ -44,6 +61,9 @@ namespace SerialM.Endpoint.WPF.Pages
             LoadPortSetting();
             InitializePortCheckTimer();
             Scroll_checkbox.IsChecked = true;
+            ThemeManager.Current.ActualApplicationThemeChanged += RefreshColors;
+            DataTextBox.Document.Blocks.Clear();
+            DataTextBox.Document.Blocks.Add(mainParagraph);
         }
 
         private void LoadPortSetting()
@@ -53,6 +73,15 @@ namespace SerialM.Endpoint.WPF.Pages
             LoadStopBits();
         }
 
+        private void RefreshColors(ThemeManager themeManager, object e)
+        {
+            //_success = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.DarkGreen : Colors.LightGreen);
+            //_fail = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.DarkRed : Colors.MediumVioletRed);
+            //_info = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.DarkBlue : Colors.LightBlue);
+            //_receive = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.Black : Colors.White);
+            //_sent = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.GreenYellow : Colors.GreenYellow);
+            //_default = (themeManager.AccentColor != null) ? new SolidColorBrush((Color)themeManager.AccentColor) : _receive;
+        }
 
 
         private void InitializeSerialPort()
@@ -137,7 +166,7 @@ namespace SerialM.Endpoint.WPF.Pages
             {
                 _serialPort.PortName = PortComboBox.SelectedItem.ToString();
                 _serialPort.BaudRate = (int)BaudRateComboBox.SelectedItem;
-                _serialPort.Parity = GetSelectedParity(); 
+                _serialPort.Parity = GetSelectedParity();
                 _serialPort.StopBits = GetSelectedStopBits();
                 //_serialPort.Handshake = Handshake.
                 _serialPort.Open();
@@ -152,38 +181,68 @@ namespace SerialM.Endpoint.WPF.Pages
             Dispatcher.Invoke(() => AppendTextToRichTextBox(data));
         }
 
-        private async void HEX_checkbox_Checked(object sender, RoutedEventArgs e)
+        private void HEX_checkbox_Checked(object sender, RoutedEventArgs e)
         {
             _hexText = (bool)HEX_checkbox.IsChecked;
 
             if (_hexText)
             {
-                await TaskTextProccess(HexConvertor.ToHex);
+                TaskTextProccess(HexConvertor.ToHex);
             }
             else
             {
-                await TaskTextProccess(HexConvertor.FromHex);
+                TaskTextProccess(HexConvertor.FromHex);
             }
         }
 
-        private async Task TaskTextProccess(Func<string, string> textProccess)
+        private void TaskTextProccess(Func<string, string> textProccess)
         {
-            await Task.Run(() =>
+            Task.Run(() =>
             {
-                var txtrange = new TextRange(DataTextBox.Document.ContentStart, DataTextBox.Document.ContentEnd);
+                //var txtrange = new TextRange(DataTextBox.Document.ContentStart, DataTextBox.Document.ContentEnd);
                 Dispatcher.Invoke(() =>
                 {
-                    StringBuilder sb = new StringBuilder();
-                    var lines = txtrange.Text.Replace("\n", "").Split('\r');
+                    //StringBuilder sb = new StringBuilder();
+                    //var lines = txtrange.Text.Replace("\n", "").Split('\r');
 
-                    for (int i = 0; i < lines.Length-1; i++)
+                    //for (int i = 0; i < lines.Length-1; i++)
+                    //{
+                    //    sb.AppendLine(textProccess(lines[i]));
+                    //}
+
+                    //txtrange.Text = sb.ToString();
+                   
+                    foreach (var txt in TextRanges)
                     {
-                        sb.AppendLine(textProccess(lines[i]));
+                        if (_hexText)
+                            txt.Text = textProccess(txt.Text).Replace("0A", "\r");
+                        else
+                            txt.Text = textProccess(txt.Text.Replace("\r", "0A"));
                     }
-
-                    txtrange.Text = sb.ToString();
                 });
             });
+        }
+
+        private void ToHex_button_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = DataTextBox.Selection.Text;
+            var hexSelected = "";
+            if (!_hexText)
+            {
+                hexSelected = selected.ToHex();
+            }
+            else
+            {
+                hexSelected = selected;
+                selected = hexSelected.FromHex();
+            }
+
+
+
+            new TextRange(HexDataTextBox.Document.ContentEnd, HexDataTextBox.Document.ContentEnd)
+            {
+                Text = selected + ':' + hexSelected + '\n'
+            };
         }
 
         private void Scroll_checkbox_Checked(object sender, RoutedEventArgs e)
@@ -228,19 +287,36 @@ namespace SerialM.Endpoint.WPF.Pages
         }
 
 
-        private void AppendTextToRichTextBox(string text, Color? color = null)
+        private void AppendTextToRichTextBox(string text, string colorResourceKey = "")
         {
-            if (color == null)
-                color = _default;
 
             if (_hexText)
-             text = text.ToHex().Replace("0A", "\r");
+                text = text.ToHex().Replace("0A", "\r");
 
-            TextRange textRange = new TextRange(DataTextBox.Document.ContentEnd, DataTextBox.Document.ContentEnd)
-            {
-                Text = text
-            };
+            var start = DataTextBox.Document.ContentEnd;
+            Run run = new Run(text, DataTextBox.Document.ContentEnd);
+
+            //var run = new Run(text, DataTextBox.Document.ContentEnd);
+            // Convert the Color to a SolidColorBrush
+            //SolidColorBrush brush = new SolidColorBrush((Color)color);
             //textRange.ApplyPropertyValue(TextElement.ForegroundProperty, color);
+
+
+            if (string.IsNullOrEmpty(colorResourceKey))
+                colorResourceKey = _default;
+
+            var span = new Span(run, start);
+            span.Style = (Style)FindResource(colorResourceKey);
+            //if (!string.IsNullOrEmpty(colorResourceKey))
+            //{
+            //    textRange.ApplyPropertyValue(TextElement.ForegroundProperty, App.Current.Resources[colorResourceKey]);
+            //}
+
+            //DataTextBox.Document.Blocks.Add(new Paragraph(span));
+            mainParagraph.Inlines.Add(span);
+
+            _textRanges.Add(run);
+
             if (_scrollToEnd)
                 DataTextBox.ScrollToEnd();
         }
