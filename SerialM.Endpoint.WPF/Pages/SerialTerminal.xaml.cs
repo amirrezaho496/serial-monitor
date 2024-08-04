@@ -1,10 +1,14 @@
 ﻿using ModernWpf;
 using SerialM.Business.Utilities;
+using SerialM.Endpoint.WPF.Controls;
+using SerialM.Endpoint.WPF.Windows;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
@@ -24,7 +28,11 @@ namespace SerialM.Endpoint.WPF.Pages
     /// </summary>
     public partial class SerialTerminal : Page
     {
+        private const string _TimeResourceKey = "TimeStyle";
+        private const string _disconnectBtnText = "Disconnect";
+        private const string _connectBtnText = "Connect";
         private static SerialPort _serialPort;
+        public ObservableCollection<SendListViewItem> SendItems { get; set; }
         //private string _default = "DefaultTextColor",
         //    _success = "SuccessColor",
         //    _fail = "FailColor",
@@ -44,6 +52,7 @@ namespace SerialM.Endpoint.WPF.Pages
         private string[] _lastKnownPorts;
 
         private bool _scrollToEnd = false, _hexText = false;
+        private int _hex_limit = 1000;
 
         private List<Run> _textRanges = new();
         private Paragraph mainParagraph = new();
@@ -56,16 +65,32 @@ namespace SerialM.Endpoint.WPF.Pages
         public SerialTerminal()
         {
             InitializeComponent();
+
             InitializeSerialPort();
             LoadAvailablePorts();
             LoadPortSetting();
             InitializePortCheckTimer();
             Scroll_checkbox.IsChecked = true;
-            ThemeManager.Current.ActualApplicationThemeChanged += RefreshColors;
+            InitializeTextBox();
+            InitializeListView();
+        }
+
+
+
+        #region Methods
+
+        private void InitializeListView()
+        {
+            SendItems = new ObservableCollection<SendListViewItem>();
+            SendItems.Add(new SendListViewItem());
+            ListView.ItemsSource = SendItems;
+        }
+
+        private void InitializeTextBox()
+        {
             DataTextBox.Document.Blocks.Clear();
             DataTextBox.Document.Blocks.Add(mainParagraph);
         }
-
         private void LoadPortSetting()
         {
             LoadBaudRates();
@@ -73,21 +98,22 @@ namespace SerialM.Endpoint.WPF.Pages
             LoadStopBits();
         }
 
-        private void RefreshColors(ThemeManager themeManager, object e)
-        {
-            //_success = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.DarkGreen : Colors.LightGreen);
-            //_fail = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.DarkRed : Colors.MediumVioletRed);
-            //_info = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.DarkBlue : Colors.LightBlue);
-            //_receive = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.Black : Colors.White);
-            //_sent = new SolidColorBrush((ThemeManager.Current.ApplicationTheme == ApplicationTheme.Light) ? Colors.GreenYellow : Colors.GreenYellow);
-            //_default = (themeManager.AccentColor != null) ? new SolidColorBrush((Color)themeManager.AccentColor) : _receive;
-        }
-
-
         private void InitializeSerialPort()
         {
             _serialPort = new SerialPort();
             _serialPort.DataReceived += SerialPort_DataReceived;
+            _serialPort.ErrorReceived += SerialPort_ErrorReceived;
+            _serialPort.Disposed += SerialPort_Disposed;
+        }
+
+        private void SerialPort_Disposed(object? sender, EventArgs e)
+        {
+            _serialPort.Container?.Dispose();
+        }
+
+        private void SerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        {
+            PortClose();
         }
 
         private void LoadAvailablePorts()
@@ -101,15 +127,6 @@ namespace SerialM.Endpoint.WPF.Pages
             _portCheckTimer = new System.Timers.Timer(1000); // Check every second
             _portCheckTimer.Elapsed += CheckPortChanges;
             _portCheckTimer.Start();
-        }
-        private void CheckPortChanges(object? sender, ElapsedEventArgs e)
-        {
-            string[] currentPorts = SerialPort.GetPortNames();
-            if (!EqualArrays(_lastKnownPorts, currentPorts))
-            {
-                _lastKnownPorts = currentPorts;
-                Dispatcher.Invoke(() => PortComboBox.ItemsSource = currentPorts);
-            }
         }
 
         private bool EqualArrays(string[] array1, string[] array2)
@@ -154,72 +171,170 @@ namespace SerialM.Endpoint.WPF.Pages
             return (StopBits)Enum.Parse(typeof(StopBits), StopBitComboBox.SelectedItem.ToString());
         }
 
-        private void ConnectButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_serialPort.IsOpen)
-            {
-                _serialPort.Close();
-                ConnectButton.Content = "Connect";
-                AppendTextToRichTextBox("Disconnected.\n", _fail);
-            }
-            else
-            {
-                _serialPort.PortName = PortComboBox.SelectedItem.ToString();
-                _serialPort.BaudRate = (int)BaudRateComboBox.SelectedItem;
-                _serialPort.Parity = GetSelectedParity();
-                _serialPort.StopBits = GetSelectedStopBits();
-                //_serialPort.Handshake = Handshake.
-                _serialPort.Open();
-                ConnectButton.Content = "Disconnect";
-                AppendTextToRichTextBox("Connected.\n", _success);
-            }
-        }
 
-        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        private async void TaskTextProccess(Func<string, string> textProccess)
         {
-            string data = _serialPort.ReadExisting();
-            Dispatcher.Invoke(() => AppendTextToRichTextBox(data));
-        }
-
-        private void HEX_checkbox_Checked(object sender, RoutedEventArgs e)
-        {
-            _hexText = (bool)HEX_checkbox.IsChecked;
-
-            if (_hexText)
+            await Task.Run(() =>
             {
-                TaskTextProccess(HexConvertor.ToHex);
-            }
-            else
-            {
-                TaskTextProccess(HexConvertor.FromHex);
-            }
-        }
+                SetSBar(TextRanges.Count, 0, 0);
 
-        private void TaskTextProccess(Func<string, string> textProccess)
-        {
-            Task.Run(() =>
-            {
                 //var txtrange = new TextRange(DataTextBox.Document.ContentStart, DataTextBox.Document.ContentEnd);
-                Dispatcher.Invoke(() =>
+                int last = TextRanges.Count - 2000;
+                if (last < 0) last = 0;
+                for (int i = TextRanges.Count - 1; i >= last; i--)
                 {
-                    //StringBuilder sb = new StringBuilder();
-                    //var lines = txtrange.Text.Replace("\n", "").Split('\r');
-
-                    //for (int i = 0; i < lines.Length-1; i++)
-                    //{
-                    //    sb.AppendLine(textProccess(lines[i]));
-                    //}
-
-                    //txtrange.Text = sb.ToString();
-                    //mainSbar.Minimom = 0;
-                    foreach (var txt in TextRanges)
+                    var txt = TextRanges[i];
+                    Dispatcher.Invoke(() =>
                     {
+                        mainSbar.Value++;
                         if (_hexText)
                             txt.Text = textProccess(txt.Text).Replace("0A", "\r");
                         else
                             txt.Text = textProccess(txt.Text.Replace("\r", "0A"));
-                    }
-                });
+                    });
+                }
+                HideSbar();
+            });
+        }
+
+        private void HideSbar()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                mainSbar.Visibility = Visibility.Hidden;
+            });
+        }
+
+        private void SetSBar(int max, int min = 0, int val = 0)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                mainSbar.Visibility = Visibility.Visible;
+                mainSbar.Minimum = min;
+                mainSbar.Maximum = max;
+                mainSbar.Value = val;
+            });
+        }
+
+        private void SendData()
+        {
+            if (_serialPort.IsOpen && !string.IsNullOrWhiteSpace(InputTextBox.Text))
+            {
+                _serialPort.WriteLine(InputTextBox.Text);
+                AppendLineToRichTextBox($"Sent: {InputTextBox.Text.Replace("\n", "\n    ")}\n", _sent);
+                InputTextBox.Clear();
+            }
+        }
+
+        private void SendData(string text)
+        {
+            if (_serialPort.IsOpen)
+            {
+                _serialPort.WriteLine(text);
+                AppendLineToRichTextBox($"Sent: {text.Replace("\n", "\n    ")}\n", _sent);
+            }
+        }
+
+
+        private void AppendLineToRichTextBox(string text, string colorResourceKey = "")
+        {
+            if (_hexText)
+                text = text.ToHex();/*.Replace("0A", "\r");*/
+
+            string dateTime = DateTime.Now.ToString("HH:mm:ss:ffff");
+
+
+
+            var start = DataTextBox.Document.ContentEnd;
+            Run run = new Run(text, DataTextBox.Document.ContentEnd);
+            var runTime = new Span(new Run($"{dateTime} : "), DataTextBox.Document.ContentEnd);
+
+            //Paragraph paragraph = new Paragraph();
+            //paragraph.Inlines.Add(run);
+
+            //var run = new Run(text, DataTextBox.Document.ContentEnd);
+            // Convert the Color to a SolidColorBrush
+            //SolidColorBrush brush = new SolidColorBrush((Color)color);
+            //textRange.ApplyPropertyValue(TextElement.ForegroundProperty, color);
+
+
+            if (string.IsNullOrEmpty(colorResourceKey))
+                colorResourceKey = _default;
+
+            runTime.Style = (Style)FindResource(_TimeResourceKey);
+
+            var span = new Span(runTime, start);
+            span.Inlines.Add(run);
+            span.Inlines.Add(new Run("\r"));
+            span.Style = (Style)FindResource(colorResourceKey);
+
+            //DataTextBox.Document.Blocks.Add(paragraph);
+            mainParagraph.Inlines.Add(span);
+
+            _textRanges.Add(run);
+
+            if (_scrollToEnd)
+                DataTextBox.ScrollToEnd();
+        }
+
+        private static bool IsTextNumeric(string text)
+        {
+            Regex regex = new Regex("[^0-9]+"); // Regex that matches non-numeric text
+            return !regex.IsMatch(text);
+        }
+        #endregion
+
+
+        #region Click Events
+        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_serialPort.IsOpen)
+            {
+                PortClose();
+            }
+            else
+            {
+                PortOpen();
+            }
+        }
+
+        private void PortOpen()
+        {
+            if (PortComboBox.SelectedItem == null)
+            {
+                AppendLineToRichTextBox("Select the Port", _fail);
+                return;
+            }
+
+            _serialPort.PortName = PortComboBox.SelectedItem.ToString();
+            _serialPort.BaudRate = (int)BaudRateComboBox.SelectedItem;
+            _serialPort.Parity = GetSelectedParity();
+            _serialPort.StopBits = GetSelectedStopBits();
+            //_serialPort.Handshake = Handshake.
+            try
+            {
+                _serialPort.Open();
+                ConnectButton.Content = _disconnectBtnText;
+                AppendLineToRichTextBox("Connected.\n", _success);
+            }
+            catch (Exception ex)
+            {
+                ConnectButton.Content = _connectBtnText;
+                AppendLineToRichTextBox(ex.Message, _fail);
+            }
+        }
+
+        private void PortClose()
+        {
+            if (_serialPort.IsOpen)
+            {
+                _serialPort.Close();
+                _serialPort.Dispose();
+            }
+            Dispatcher.Invoke(() =>
+            {
+                ConnectButton.Content = _connectBtnText;
+                AppendLineToRichTextBox("Disconnected.\n", _fail);
             });
         }
 
@@ -245,6 +360,100 @@ namespace SerialM.Endpoint.WPF.Pages
             };
         }
 
+        private void Clear_button_Click(object sender, RoutedEventArgs e)
+        {
+            mainParagraph.Inlines.Clear();
+            TextRanges.Clear();
+        }
+
+        private void ClearHex_button_Click(object sender, RoutedEventArgs e)
+        {
+            HexDataTextBox.Document.Blocks.Clear();
+        }
+
+        private void SendButton_Click(object sender, RoutedEventArgs e)
+        {
+            SendData();
+        }
+
+        private void SendSavedCommand_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is SendListViewItem item)
+            {
+                //MessageBox.Show($"Send button clicked for {item.Text} with delay {item.Delay}");
+
+                SendData(item.Text);
+            }
+        }
+
+        private async void AutoRunBtn_Click(object sender, RoutedEventArgs e)
+        {
+            await Task.Run(async () =>
+            {
+                foreach (var item in SendItems)
+                {
+                    if (!item.CanSend) continue;
+
+                    if (item.Delay > 0)
+                        await Task.Delay(item.Delay);
+
+                    Dispatcher.Invoke(() => SendData(item.Text));
+                }
+            });
+        }
+
+        #endregion
+
+        #region Events 
+        private async void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            if (_serialPort.IsOpen && _serialPort.PortName != null)
+            {
+                try
+                {
+                    string data = _serialPort.ReadLine();
+                    await Task.Run(() =>
+                    {
+                        Dispatcher.Invoke(() => AppendLineToRichTextBox(data));
+                    });
+                }
+                catch (Exception ex)
+                {
+                    PortClose();
+                    AppendLineToRichTextBox(ex.Message, _fail);
+                }
+            }
+            else
+            {
+                PortClose();
+            }
+        }
+
+        private void AddNewSendItem_Click(object sender, RoutedEventArgs e)
+        {
+            //AddItemWindow addItemWindow = new AddItemWindow();
+            //if (addItemWindow.ShowDialog() == true)
+            //{
+            //    SendItems.Add(addItemWindow.NewItem);
+            //}
+
+            SendItems.Add(new SendListViewItem());
+        }
+
+        private void HEX_checkbox_Checked(object sender, RoutedEventArgs e)
+        {
+            _hexText = (bool)HEX_checkbox.IsChecked;
+
+            if (_hexText)
+            {
+                TaskTextProccess(HexConvertor.ToHex);
+            }
+            else
+            {
+                TaskTextProccess(HexConvertor.FromHex);
+            }
+        }
+
         private void Scroll_checkbox_Checked(object sender, RoutedEventArgs e)
         {
             _scrollToEnd = (bool)Scroll_checkbox.IsChecked;
@@ -254,10 +463,7 @@ namespace SerialM.Endpoint.WPF.Pages
                 DataTextBox.ScrollToEnd();
         }
 
-        private void SendButton_Click(object sender, RoutedEventArgs e)
-        {
-            SendData();
-        }
+
 
         private void InputTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -276,49 +482,29 @@ namespace SerialM.Endpoint.WPF.Pages
             }
         }
 
-        private void SendData()
+        private void CheckPortChanges(object? sender, ElapsedEventArgs e)
         {
-            if (_serialPort.IsOpen && !string.IsNullOrWhiteSpace(InputTextBox.Text))
+            string[] currentPorts = SerialPort.GetPortNames();
+            if (!EqualArrays(_lastKnownPorts, currentPorts))
             {
-                _serialPort.WriteLine(InputTextBox.Text);
-                AppendTextToRichTextBox($"Sent: {InputTextBox.Text.Replace("\n", "\n    ")}\n", _sent);
-                InputTextBox.Clear();
+                Dispatcher.Invoke(() =>
+                {
+                    if (PortComboBox.SelectedItem == null ||
+                        PortComboBox.SelectedItem.ToString() != _serialPort.PortName ||
+                        currentPorts.Length <= 0)
+                        PortClose();
+                });
+
+                _lastKnownPorts = currentPorts;
+                Dispatcher.Invoke(() => PortComboBox.ItemsSource = currentPorts);
             }
         }
 
-
-        private void AppendTextToRichTextBox(string text, string colorResourceKey = "")
+        private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-
-            if (_hexText)
-                text = text.ToHex().Replace("0A", "\r");
-
-            var start = DataTextBox.Document.ContentEnd;
-            Run run = new Run(text, DataTextBox.Document.ContentEnd);
-
-            //var run = new Run(text, DataTextBox.Document.ContentEnd);
-            // Convert the Color to a SolidColorBrush
-            //SolidColorBrush brush = new SolidColorBrush((Color)color);
-            //textRange.ApplyPropertyValue(TextElement.ForegroundProperty, color);
-
-
-            if (string.IsNullOrEmpty(colorResourceKey))
-                colorResourceKey = _default;
-
-            var span = new Span(run, start);
-            span.Style = (Style)FindResource(colorResourceKey);
-            //if (!string.IsNullOrEmpty(colorResourceKey))
-            //{
-            //    textRange.ApplyPropertyValue(TextElement.ForegroundProperty, App.Current.Resources[colorResourceKey]);
-            //}
-
-            //DataTextBox.Document.Blocks.Add(new Paragraph(span));
-            mainParagraph.Inlines.Add(span);
-
-            _textRanges.Add(run);
-
-            if (_scrollToEnd)
-                DataTextBox.ScrollToEnd();
+            e.Handled = !IsTextNumeric(e.Text);
         }
+        #endregion
+
     }
 }

@@ -4,23 +4,24 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:SerialM.Endpoint.WPF.Pages"
+      xmlns:dd="urn:gong-wpf-dragdrop"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
+      d:DesignHeight="600" d:DesignWidth="900"
       Title="SerialTerminal">
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="65*"/>
-            <RowDefinition Height="40"/>
-            <RowDefinition Height="12*" MinHeight="60"/>
+            <RowDefinition Height="auto" MinHeight="36"/>
+            <RowDefinition Height="390*"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="86*" MinHeight="60"/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
 
         </Grid.ColumnDefinitions>
 
-        <DockPanel Margin="0,0,0,298" Grid.RowSpan="2" >
+        <DockPanel >
             <Button x:Name="ConnectButton" DockPanel.Dock="Right" Content="Connect" Click="ConnectButton_Click" ClickMode="Release" VerticalAlignment="Stretch" Margin="10,0,10,0" HorizontalAlignment="Stretch"/>
             <WrapPanel Grid.Row="1"  Height="auto">
                 <!-- Port Selection -->
@@ -53,15 +54,52 @@
             </WrapPanel>
         </DockPanel>
         <!-- Connect/Disconnect Button -->
-        <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,0,40" Grid.RowSpan="2">
+        <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="auto"/>
-                <ColumnDefinition />
+                <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
 
+            <Grid Margin="10" Grid.Column="0" Grid.Row="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="30"/>
+                </Grid.RowDefinitions>
+                
+                <!-- ListView with buttons in each item -->
+                <ListView
+                    dd:DragDrop.IsDragSource="True" 
+                    dd:DragDrop.IsDropTarget="True"
+                    x:Name="ListView" Grid.Column="0" Grid.Row="0" Margin="10" >
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding Text}" Width="100" VerticalAlignment="Center" Margin="5"/>
+                                <Label Content="delay : " VerticalAlignment="Center" />
+                                <TextBox Text="{Binding Delay}" Width="50" Margin="5" PreviewTextInput="TextBox_PreviewTextInput"/>
+                                <Button Content="Send" Click="SendSavedCommand_Click" Tag="{Binding}" Margin="5"/>
+                                <CheckBox IsChecked="{Binding CanSend}" VerticalAlignment="Center" HorizontalAlignment="Center" Width="10" Margin="5"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Button x:Name="AddNewSendItem" Content="Add" Click="AddNewSendItem_Click"/>
+                    <Button x:Name="AutoRunBtn" Content="Auto Send" Click="AutoRunBtn_Click"/>
+                </StackPanel>
+            </Grid>
+
+
+            <GridSplitter Grid.Row="0" Grid.Column="1" Margin="5" Padding="5"
+                  Width="3" Background="{DynamicResource DefaultTextColor}" 
+                  VerticalAlignment="Stretch" 
+                  HorizontalAlignment="Center"/>
             <!-- Data Display Area -->
-            <RichTextBox x:Name="DataTextBox" Grid.Column="0"  Grid.ColumnSpan="1" Margin="10,5,2,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
+            <RichTextBox x:Name="DataTextBox" Grid.Column="2"  Grid.ColumnSpan="1" Margin="10,5,2,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
                 <RichTextBox.Resources>
                     <Style TargetType="{x:Type Paragraph}">
                         <Setter Property="Margin" Value="0"/>
@@ -69,18 +107,20 @@
                 </RichTextBox.Resources>
             </RichTextBox>
 
-            <GridSplitter Grid.Row="0" Grid.Column="1" Margin="5" Padding="5"
+            <GridSplitter Grid.Row="0" Grid.Column="3" Margin="5" Padding="5"
                   Width="3" Background="{DynamicResource DefaultTextColor}" 
                   VerticalAlignment="Stretch" 
-                  HorizontalAlignment="Center" />
+                  HorizontalAlignment="Center"/>
 
-            <Grid Grid.Column="3" Grid.ColumnSpan="1" >
+            <Grid Grid.Column="4" Grid.ColumnSpan="1" >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="40"/>
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="40"/>
                 </Grid.RowDefinitions>
-                <Label Content="Hex:" Grid.Row="0"/>
+                <DockPanel Margin="10"  Grid.Row="0">
+                    <Label HorizontalAlignment="Left" VerticalAlignment="Center" Content="Hex:" DockPanel.Dock="Left" Width="30"/>
+                </DockPanel>
                 <RichTextBox Grid.Row="1" x:Name="HexDataTextBox"  Margin="2,5,10,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
                     <RichTextBox.Resources>
                         <Style TargetType="{x:Type Paragraph}">
@@ -88,26 +128,24 @@
                         </Style>
                     </RichTextBox.Resources>
                 </RichTextBox>
-                <Button Grid.Row="2" x:Name="ToHex_button" Content="To Hex the Selection" Click="ToHex_button_Click"/>
+                <DockPanel Margin="10,0,10,0" Grid.Row="2">
+                    <Button  x:Name="ToHex_button" Margin="2" DockPanel.Dock="Left"  Content="To Hex the Selection" Click="ToHex_button_Click"/>
+                    <Button x:Name="ClearHex_button" Content="Clear" Margin="2" DockPanel.Dock="Right" Width="64" Click="ClearHex_button_Click"/>
+                </DockPanel>
             </Grid>
         </Grid>
 
 
-        <Grid Grid.Row="2" Margin="10,0,0,60" Grid.RowSpan="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="10,0,0,0" Grid.RowSpan="1">
 
-            <CheckBox Content="HEX" x:Name="HEX_checkbox" Grid.Column="0" Margin="5" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Unchecked="HEX_checkbox_Checked" Checked="HEX_checkbox_Checked"/>
-            <CheckBox Content="Scroll to End" x:Name="Scroll_checkbox" Grid.Column="1" Margin="5" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Unchecked="Scroll_checkbox_Checked" Checked="Scroll_checkbox_Checked"/>
-        </Grid>
+            <CheckBox Content="HEX" x:Name="HEX_checkbox" Grid.Column="0" Margin="5,5,1,5" VerticalAlignment="Stretch" Unchecked="HEX_checkbox_Checked" Checked="HEX_checkbox_Checked"/>
+            <CheckBox Content="Scroll to End" x:Name="Scroll_checkbox" Margin="0,5,0,5" VerticalAlignment="Stretch" Unchecked="Scroll_checkbox_Checked" Checked="Scroll_checkbox_Checked"/>
+            <Button x:Name="Clear_button" Content="Clear" Click="Clear_button_Click"/>
+        </StackPanel>
 
         <!-- Data Entry Area -->
         <TextBox x:Name="InputTextBox" Grid.Row="3" Grid.Column="0"
-                 Margin="10,10,10,10"
+                 Margin="10"
                  KeyDown="InputTextBox_KeyDown" MinHeight="33"
                  PreviewKeyDown="TextBox_PreviewKeyDown"
                  AcceptsReturn="True"/>

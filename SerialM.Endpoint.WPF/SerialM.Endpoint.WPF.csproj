@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="gong-wpf-dragdrop" Version="3.2.1" />
     <PackageReference Include="ModernWpfUI" Version="0.9.6" />
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
   </ItemGroup>

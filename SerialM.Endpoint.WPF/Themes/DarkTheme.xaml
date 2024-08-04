@@ -8,6 +8,7 @@
     <SolidColorBrush x:Key="InfoColor" Color="LightBlue"/>
     <SolidColorBrush x:Key="ReceiveColor" Color="White"/>
     <SolidColorBrush x:Key="SentColor" Color="#FFF2FF92"/>
+    <SolidColorBrush x:Key="TimeColor" Color="#FFFFBFBF"/>
     
     <SolidColorBrush x:Key="ListboxSelectedBack" Color="#FF3B5467"/>
     <SolidColorBrush x:Key="ListboxSelectedFill" Color="#FF84BBFD"/>

@@ -7,7 +7,8 @@
     <SolidColorBrush x:Key="InfoColor" Color="#FF00278D"/>
     <SolidColorBrush x:Key="ReceiveColor" Color="Black"/>
     <SolidColorBrush x:Key="SentColor" Color="#FF5D6F00"/>
-    
+    <SolidColorBrush x:Key="TimeColor" Color="#FF5C4242"/>
+
     <!--lisbox colors-->
     <SolidColorBrush x:Key="ListboxSelectedBack" Color="#d0ebff"/>
     <SolidColorBrush x:Key="ListboxSelectedFill" Color="#2a84f1"/>

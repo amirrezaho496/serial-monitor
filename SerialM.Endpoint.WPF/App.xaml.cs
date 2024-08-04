@@ -13,7 +13,10 @@ namespace SerialM.Endpoint.WPF
     {
         public App()
         {
+
         }
+
+        
     }
 
 }

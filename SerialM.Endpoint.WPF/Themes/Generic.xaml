@@ -4,7 +4,6 @@
     xmlns:local="clr-namespace:SerialM.Endpoint.WPF"
     xmlns:ctrl ="clr-namespace:SerialM.Endpoint.WPF.Controls">
 
-
     <Style TargetType="{x:Type ctrl:NavButton}">
         <Setter Property="Template">
             <Setter.Value>
@@ -30,4 +29,6 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+
 </ResourceDictionary>
