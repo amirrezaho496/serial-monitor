@@ -211,7 +211,7 @@ namespace SerialM.Endpoint.WPF.Pages
                     //}
 
                     //txtrange.Text = sb.ToString();
-                   
+                    //mainSbar.Minimom = 0;
                     foreach (var txt in TextRanges)
                     {
                         if (_hexText)
