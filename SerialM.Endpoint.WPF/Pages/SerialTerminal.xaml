@@ -7,7 +7,9 @@
       xmlns:dd="urn:gong-wpf-dragdrop"
       mc:Ignorable="d" 
       d:DesignHeight="600" d:DesignWidth="900"
-      Title="SerialTerminal">
+      Title="SerialTerminal"
+      Unloaded="Page_Unloaded"
+      Loaded="Page_Loaded">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -63,7 +65,7 @@
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
 
-            <Grid Margin="10" Grid.Column="0" Grid.Row="0">
+            <Grid Margin="5" Grid.Column="0" Grid.Row="0">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition Height="30"/>
@@ -73,7 +75,7 @@
                 <ListView
                     dd:DragDrop.IsDragSource="True" 
                     dd:DragDrop.IsDropTarget="True"
-                    x:Name="ListView" Grid.Column="0" Grid.Row="0" Margin="10" >
+                    x:Name="ListView" Grid.Column="0" Grid.Row="0" Margin="10,10,0,10" >
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -81,15 +83,16 @@
                                 <Label Content="delay : " VerticalAlignment="Center" />
                                 <TextBox Text="{Binding Delay}" Width="50" Margin="5" PreviewTextInput="TextBox_PreviewTextInput"/>
                                 <Button Content="Send" Click="SendSavedCommand_Click" Tag="{Binding}" Margin="5"/>
-                                <CheckBox IsChecked="{Binding CanSend}" VerticalAlignment="Center" HorizontalAlignment="Center" Width="10" Margin="5"/>
+                                <CheckBox IsChecked="{Binding CanSend}" Content="Send in Auto" VerticalAlignment="Center" HorizontalAlignment="Center" Width="10" Margin="5"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Button x:Name="AddNewSendItem" Content="Add" Click="AddNewSendItem_Click"/>
-                    <Button x:Name="AutoRunBtn" Content="Auto Send" Click="AutoRunBtn_Click"/>
+                    <Button x:Name="AddNewSendItem" Content="Add" Click="AddNewSendItem_Click" Margin="5,0,5,0"/>
+                    <Button x:Name="AutoRunBtn" Content="Auto Send" Click="AutoRunBtn_Click" Margin="5,0,5,0"/>
+                    <Button x:Name="RemoveBtn" Content="Remove" Click="RemoveBtn_Click" Margin="5,0,5,0"/>
                 </StackPanel>
             </Grid>
 

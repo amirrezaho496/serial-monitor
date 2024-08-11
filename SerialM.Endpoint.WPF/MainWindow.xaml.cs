@@ -1,8 +1,12 @@
 ﻿using Microsoft.Win32;
 using ModernWpf;
+using SerialM.Business.Utilities;
 using SerialM.Endpoint.WPF.Controls;
+using SerialM.Endpoint.WPF.Interfaces;
+using SerialM.Endpoint.WPF.Models;
 using SerialM.Endpoint.WPF.Pages;
 using System;
+using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Text;
 using System.Timers;
@@ -14,15 +18,18 @@ using System.Windows.Media;
 
 namespace SerialMonitor
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, ISaveable
     {
         static SerialTerminal SerialTerminal = new SerialTerminal();
         
         static List<Page> pages = new List<Page>();
+
+        public string Path { get; private set; }
+
         public MainWindow()
         {
             InitializeComponent();
-            pages.Add(new SerialTerminal());
+            pages.Add(SerialTerminal);
             pages.Add(new Page2());
         }
 
@@ -36,6 +43,8 @@ namespace SerialMonitor
             {
                 //DataTextBox.AppendText($"Opened file: {openFileDialog.FileName}\n");
                 //TODO: Load file content if needed
+                Path = openFileDialog.FileName;
+                Load();
             }
         }
 
@@ -46,6 +55,8 @@ namespace SerialMonitor
             {
                 //AppendTextToRichTextBox($"Saved file: {saveFileDialog.FileName}\n", _info);
                 // TODO: Save file content if needed
+                Path = saveFileDialog.FileName;
+                Save();
             }
         }
 
@@ -111,6 +122,19 @@ namespace SerialMonitor
                     DarkThemeMenuBtn.IsChecked = true;
                 }
             });
+        }
+
+        public void Save()
+        {
+        }
+
+        public void Load()
+        {
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            SerialTerminal.SavePage();
         }
     }
 }

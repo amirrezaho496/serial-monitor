@@ -1,6 +1,7 @@
 ﻿using ModernWpf;
+using SerialM.Business.Extensions;
 using SerialM.Business.Utilities;
-using SerialM.Endpoint.WPF.Controls;
+using SerialM.Endpoint.WPF.Models;
 using SerialM.Endpoint.WPF.Windows;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
@@ -28,11 +30,25 @@ namespace SerialM.Endpoint.WPF.Pages
     /// </summary>
     public partial class SerialTerminal : Page
     {
+
+        #region Data
         private const string _TimeResourceKey = "TimeStyle";
         private const string _disconnectBtnText = "Disconnect";
         private const string _connectBtnText = "Connect";
         private static SerialPort _serialPort;
-        public ObservableCollection<SendListViewItem> SendItems { get; set; }
+        private Task _autoRunTask;
+        private CancellationTokenSource _cancellationTokenSource;
+
+        private ObservableCollection<SendListViewItem> _sendListViewItems;
+        public ObservableCollection<SendListViewItem> SendItems
+        {
+            get => _sendListViewItems;
+            set
+            {
+                this._sendListViewItems = value;
+                ListView.ItemsSource = this._sendListViewItems;
+            }
+        }
         //private string _default = "DefaultTextColor",
         //    _success = "SuccessColor",
         //    _fail = "FailColor",
@@ -54,13 +70,14 @@ namespace SerialM.Endpoint.WPF.Pages
         private bool _scrollToEnd = false, _hexText = false;
         private int _hex_limit = 1000;
 
-        private List<Run> _textRanges = new();
+        private List<TextboxItem> _textRanges = new();
         private Paragraph mainParagraph = new();
 
-        public List<Run> TextRanges
+        public List<TextboxItem> TextRanges
         {
             get => _textRanges;
         }
+        #endregion
 
         public SerialTerminal()
         {
@@ -75,13 +92,23 @@ namespace SerialM.Endpoint.WPF.Pages
             InitializeListView();
         }
 
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            SavePage();
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadPage();
+        }
+
 
 
         #region Methods
 
         private void InitializeListView()
         {
-            SendItems = new ObservableCollection<SendListViewItem>();
+            SendItems = new();
             SendItems.Add(new SendListViewItem());
             ListView.ItemsSource = SendItems;
         }
@@ -183,7 +210,7 @@ namespace SerialM.Endpoint.WPF.Pages
                 if (last < 0) last = 0;
                 for (int i = TextRanges.Count - 1; i >= last; i--)
                 {
-                    var txt = TextRanges[i];
+                    var txt = TextRanges[i].TextRun;
                     Dispatcher.Invoke(() =>
                     {
                         mainSbar.Value++;
@@ -236,18 +263,20 @@ namespace SerialM.Endpoint.WPF.Pages
         }
 
 
-        private void AppendLineToRichTextBox(string text, string colorResourceKey = "")
+        private void AppendLineToRichTextBox(string text, string colorResourceKey = "", string dateTime = "")
         {
             if (_hexText)
                 text = text.ToHex();/*.Replace("0A", "\r");*/
 
-            string dateTime = DateTime.Now.ToString("HH:mm:ss:ffff");
+            if (dateTime == "")
+                dateTime = DateTime.Now.ToString("HH:mm:ss:ffff");
 
 
 
             var start = DataTextBox.Document.ContentEnd;
             Run run = new Run(text, DataTextBox.Document.ContentEnd);
-            var runTime = new Span(new Run($"{dateTime} : "), DataTextBox.Document.ContentEnd);
+            Run timeInline = new Run(dateTime);
+            var runTime = new Span(timeInline, DataTextBox.Document.ContentEnd);
 
             //Paragraph paragraph = new Paragraph();
             //paragraph.Inlines.Add(run);
@@ -263,6 +292,7 @@ namespace SerialM.Endpoint.WPF.Pages
 
             runTime.Style = (Style)FindResource(_TimeResourceKey);
 
+            runTime.Inlines.Add(new Run(" : "));
             var span = new Span(runTime, start);
             span.Inlines.Add(run);
             span.Inlines.Add(new Run("\r"));
@@ -271,7 +301,7 @@ namespace SerialM.Endpoint.WPF.Pages
             //DataTextBox.Document.Blocks.Add(paragraph);
             mainParagraph.Inlines.Add(span);
 
-            _textRanges.Add(run);
+            _textRanges.Add(new TextboxItem { TextRun = run, TimeRun = timeInline, ResourceKey = colorResourceKey });
 
             if (_scrollToEnd)
                 DataTextBox.ScrollToEnd();
@@ -283,7 +313,6 @@ namespace SerialM.Endpoint.WPF.Pages
             return !regex.IsMatch(text);
         }
         #endregion
-
 
         #region Click Events
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
@@ -305,7 +334,7 @@ namespace SerialM.Endpoint.WPF.Pages
                 AppendLineToRichTextBox("Select the Port", _fail);
                 return;
             }
-
+            // config
             _serialPort.PortName = PortComboBox.SelectedItem.ToString();
             _serialPort.BaudRate = (int)BaudRateComboBox.SelectedItem;
             _serialPort.Parity = GetSelectedParity();
@@ -388,18 +417,56 @@ namespace SerialM.Endpoint.WPF.Pages
 
         private async void AutoRunBtn_Click(object sender, RoutedEventArgs e)
         {
-            await Task.Run(async () =>
+            if (_autoRunTask != null && !_autoRunTask.IsCompleted)
             {
-                foreach (var item in SendItems)
+                // If the task is already running, cancel it
+                _cancellationTokenSource.Cancel();
+                AutoRunBtn.IsEnabled = false; // Disable button to prevent multiple clicks during cancellation
+                return;
+            }
+
+            // Initialize the CancellationTokenSource
+            _cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _cancellationTokenSource.Token;
+
+            AutoRunBtn.Content = "Cancel"; // Change button text to "Cancel"
+
+            // Create and start the task
+            _autoRunTask = Task.Run(async () =>
+            {
+                try
                 {
-                    if (!item.CanSend) continue;
+                    Dispatcher.Invoke(() => RemoveBtn.IsEnabled = false);
+                    foreach (var item in SendItems)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested(); // Check for cancellation
 
-                    if (item.Delay > 0)
-                        await Task.Delay(item.Delay);
+                        if (!item.CanSend) continue;
 
-                    Dispatcher.Invoke(() => SendData(item.Text));
+                        if (item.Delay > 0)
+                            await Task.Delay(item.Delay, cancellationToken); // Pass the cancellation token
+
+                        Dispatcher.Invoke(() => SendData(item.Text));
+                        Dispatcher.Invoke(() => ListView.SelectedItem = item);
+                    }
                 }
-            });
+                catch (OperationCanceledException)
+                {
+                    // Handle the cancellation
+                }
+                finally
+                {
+                    Dispatcher.Invoke(() => RemoveBtn.IsEnabled = true);
+                    // Revert the button text and state after completion or cancellation
+                    Dispatcher.Invoke(() =>
+                    {
+                        AutoRunBtn.Content = "Auto Send";
+                        AutoRunBtn.IsEnabled = true;
+                    });
+                }
+            }, cancellationToken);
+
+            await _autoRunTask;
         }
 
         #endregion
@@ -436,8 +503,20 @@ namespace SerialM.Endpoint.WPF.Pages
             //{
             //    SendItems.Add(addItemWindow.NewItem);
             //}
+            if (_autoRunTask == null || _autoRunTask.IsCompleted)
+                SendItems.Add(new SendListViewItem());
+            else
+                MessageBox.Show("AutoRun is not Completed !", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
 
-            SendItems.Add(new SendListViewItem());
+        private void RemoveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (ListView.SelectedItems.Count == 0)
+                return;
+
+            var selectedIndex = ListView.SelectedIndex;
+
+            SendItems.RemoveAt(selectedIndex);
         }
 
         private void HEX_checkbox_Checked(object sender, RoutedEventArgs e)
@@ -503,6 +582,80 @@ namespace SerialM.Endpoint.WPF.Pages
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !IsTextNumeric(e.Text);
+        }
+        #endregion
+
+        #region Saving and Loading
+        public void SavePage()
+        {
+            saveConfig();
+            saveAutoSendItems();
+            saveText();
+        }
+
+        public void LoadPage()
+        {
+            loadConfig();
+            loadAutoSendItems();
+            loadText();
+        }
+
+        private void saveText()
+        {
+            PageStorage.Save(PathExtentions.LogsPath, _textRanges.Select(x => new TextBoxInlineItem
+            {
+                Text = x.TextRun.Text,
+                Time = x.TimeRun.Text,
+                ResourceKey = x.ResourceKey
+            }));
+        }
+        private async void loadText()
+        {
+            await Task.Run(() =>
+            {
+                _textRanges.Clear();
+                Dispatcher.Invoke(() => { mainParagraph.Inlines.Clear(); });
+
+                var loadedText = PageStorage.Load<List<TextBoxInlineItem>>(PathExtentions.LogsPath);
+
+                foreach (var item in loadedText)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        AppendLineToRichTextBox(item.Text, item.ResourceKey, item.Time);
+                    });
+                }
+
+            });
+        }
+        private void saveConfig()
+        {
+            var config = new SerialConfig()
+            {
+                PortName = PortComboBox.SelectedItem?.ToString(),
+                BaudRate = (int)BaudRateComboBox.SelectedItem,
+                Parity = GetSelectedParity(),
+                StopBits = GetSelectedStopBits(),
+            };
+            PageStorage.Save(PathExtentions.SerialConfigPath, config);
+        }
+        private void loadConfig()
+        {
+            var config = PageStorage.Load<SerialConfig>(PathExtentions.SerialConfigPath);
+            PortComboBox.SelectedValue = config.PortName;
+            BaudRateComboBox.SelectedValue = config.BaudRate;
+            ParityComboBox.SelectedIndex = (int)config.Parity;
+            StopBitComboBox.SelectedIndex = (int)config.StopBits;
+        }
+        private void loadAutoSendItems()
+        {
+            this.SendItems.Clear();
+            var items = PageStorage.Load<ObservableCollection<SendListViewItem>>(PathExtentions.SendSerialItemsPath);
+            this.SendItems = items;
+        }
+        private void saveAutoSendItems()
+        {
+            PageStorage.Save(PathExtentions.SendSerialItemsPath, this.SendItems);
         }
         #endregion
 

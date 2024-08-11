@@ -4,7 +4,8 @@
         xmlns:ctrl ="clr-namespace:SerialM.Endpoint.WPF.Controls"
         xmlns:ui="http://schemas.modernwpf.com/2019"
         ui:WindowHelper.UseModernWindowStyle="True"
-    Title="Serial Monitor" MinHeight="280" Height="500" MinWidth="650" Width="850">
+    Title="Serial Monitor" MinHeight="280" Height="500" MinWidth="650" Width="850"
+        Closing="Window_Closing">
 
     <Grid>
 

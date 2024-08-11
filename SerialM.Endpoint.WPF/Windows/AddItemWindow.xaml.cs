@@ -1,4 +1,4 @@
-﻿using SerialM.Endpoint.WPF.Controls;
+﻿using SerialM.Endpoint.WPF.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
