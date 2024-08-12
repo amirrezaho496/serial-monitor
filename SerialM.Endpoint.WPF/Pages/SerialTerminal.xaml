@@ -24,6 +24,7 @@
         </Grid.ColumnDefinitions>
 
         <DockPanel >
+        <!-- Connect/Disconnect Button -->
             <Button x:Name="ConnectButton" DockPanel.Dock="Right" Content="Connect" Click="ConnectButton_Click" ClickMode="Release" VerticalAlignment="Stretch" Margin="10,0,10,0" HorizontalAlignment="Stretch"/>
             <WrapPanel Grid.Row="1"  Height="auto">
                 <!-- Port Selection -->
@@ -55,7 +56,6 @@
 
             </WrapPanel>
         </DockPanel>
-        <!-- Connect/Disconnect Button -->
         <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" />

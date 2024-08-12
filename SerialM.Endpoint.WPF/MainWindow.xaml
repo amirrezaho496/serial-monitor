@@ -5,7 +5,8 @@
         xmlns:ui="http://schemas.modernwpf.com/2019"
         ui:WindowHelper.UseModernWindowStyle="True"
     Title="Serial Monitor" MinHeight="280" Height="500" MinWidth="650" Width="850"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        Loaded="Window_Loaded">
 
     <Grid>
 
@@ -24,6 +25,8 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_Open" Click="OpenMenuItem_Click"/>
                 <MenuItem Header="_Save" Click="SaveMenuItem_Click"/>
+                <Separator/>
+                <MenuItem Header="External _Window" Click="ExWindowMenuItem_Click"/>
                 <Separator/>
                 <MenuItem Header="_Exit" Click="ExitMenuItem_Click"/>
             </MenuItem>

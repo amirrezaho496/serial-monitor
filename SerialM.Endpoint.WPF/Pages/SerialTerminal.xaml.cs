@@ -1,34 +1,22 @@
-﻿using ModernWpf;
-using SerialM.Business.Extensions;
+﻿using SerialM.Business.Extensions;
 using SerialM.Business.Utilities;
+using SerialM.Endpoint.WPF.Interfaces;
 using SerialM.Endpoint.WPF.Models;
-using SerialM.Endpoint.WPF.Windows;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SerialM.Endpoint.WPF.Pages
 {
     /// <summary>
     /// Interaction logic for SerialTerminal.xaml
     /// </summary>
-    public partial class SerialTerminal : Page
+    public partial class SerialTerminal : Page , ISaveablePage
     {
 
         #region Data
@@ -94,12 +82,12 @@ namespace SerialM.Endpoint.WPF.Pages
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
-            SavePage();
+            //SavePage();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadPage();
+            //LoadPage();
         }
 
 
@@ -575,7 +563,12 @@ namespace SerialM.Endpoint.WPF.Pages
                 });
 
                 _lastKnownPorts = currentPorts;
-                Dispatcher.Invoke(() => PortComboBox.ItemsSource = currentPorts);
+                Dispatcher.Invoke(() =>
+                {
+                    PortComboBox.ItemsSource = currentPorts;
+                    if (PortComboBox.Items.Count > 0)
+                        PortComboBox.SelectedIndex = 0;
+                });
             }
         }
 
@@ -614,18 +607,23 @@ namespace SerialM.Endpoint.WPF.Pages
             await Task.Run(() =>
             {
                 _textRanges.Clear();
-                Dispatcher.Invoke(() => { mainParagraph.Inlines.Clear(); });
+                Dispatcher.Invoke(() =>
+                {
+                    mainParagraph.Inlines.Clear();
+                });
 
                 var loadedText = PageStorage.Load<List<TextBoxInlineItem>>(PathExtentions.LogsPath);
+                SetSBar(loadedText.Count, 0, 0);
 
                 foreach (var item in loadedText)
                 {
                     Dispatcher.Invoke(() =>
                     {
+                        mainSbar.Value += 1;
                         AppendLineToRichTextBox(item.Text, item.ResourceKey, item.Time);
                     });
                 }
-
+                HideSbar();
             });
         }
         private void saveConfig()

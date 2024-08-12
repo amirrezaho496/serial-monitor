@@ -5,6 +5,7 @@ using SerialM.Endpoint.WPF.Controls;
 using SerialM.Endpoint.WPF.Interfaces;
 using SerialM.Endpoint.WPF.Models;
 using SerialM.Endpoint.WPF.Pages;
+using SerialM.Endpoint.WPF.Windows;
 using System;
 using System.Collections.ObjectModel;
 using System.IO.Ports;
@@ -21,15 +22,18 @@ namespace SerialMonitor
     public partial class MainWindow : Window, ISaveable
     {
         static SerialTerminal SerialTerminal = new SerialTerminal();
+        static NetworkTerminal NetworkTerminal = new NetworkTerminal();
         
-        static List<Page> pages = new List<Page>();
+        static List<Page> pages = new ();
+        private List<ExternalPage> windows = new();
 
-        public string Path { get; private set; }
+        public string Path { get; private set; } = string.Empty;
 
         public MainWindow()
         {
             InitializeComponent();
             pages.Add(SerialTerminal);
+            pages.Add(NetworkTerminal);
             pages.Add(new Page2());
         }
 
@@ -85,13 +89,14 @@ namespace SerialMonitor
         {
             MessageBox.Show("Serial Monitor v1.0\nAuthor: AMirreza", "About");
         }
-        #endregion
 
-        private void sidebar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void ExWindowMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            var selected = sidebar.SelectedIndex;
-            NavFrame.Navigate(MainWindow.pages[selected % MainWindow.pages.Count]);
+            ExternalPage externalPage = new(GetSelectedPage());
+            externalPage.Show();
+            windows.Add(externalPage);
         }
+
         private void LightThemeMenuBtn_Click(object sender, RoutedEventArgs e)
         {
             ClearValue(ThemeManager.RequestedThemeProperty);
@@ -123,6 +128,25 @@ namespace SerialMonitor
                 }
             });
         }
+        #endregion
+
+        private void sidebar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            Page selected = GetSelectedPage();
+            NavFrame.Navigate(selected);
+
+            foreach (var exwin in windows) {
+                if (selected == exwin.ExPage) {
+                    exwin.Close();
+                }
+            }
+        }
+
+        private Page GetSelectedPage()
+        {
+            var selected = sidebar.SelectedIndex;
+            return MainWindow.pages[selected % MainWindow.pages.Count];
+        }
 
         public void Save()
         {
@@ -132,9 +156,35 @@ namespace SerialMonitor
         {
         }
 
+        private void CloseAllWindows()
+        {
+            foreach (var win in windows)
+            {
+                win.Close();
+            }
+        }
+
+        private void SavingAllPages()
+        {
+            foreach (var page in pages)
+            {
+                if (page is ISaveablePage)
+                {
+                    ((ISaveablePage)page).SavePage();
+                }
+            }
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             SerialTerminal.SavePage();
+
+            CloseAllWindows();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            SerialTerminal.LoadPage();
         }
     }
 }
