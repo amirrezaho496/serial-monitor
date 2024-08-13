@@ -97,10 +97,11 @@
             </Grid>
 
 
-            <GridSplitter Grid.Row="0" Grid.Column="1" Margin="5" Padding="5"
+            <GridSplitter x:Name="LogSplitter" Grid.Row="0" Grid.Column="1" Margin="5" Padding="5"
                   Width="3" Background="{DynamicResource DefaultTextColor}" 
                   VerticalAlignment="Stretch" 
-                  HorizontalAlignment="Center"/>
+                  HorizontalAlignment="Center"
+                  SizeChanged="LogSplitter_SizeChanged"/>
             <!-- Data Display Area -->
             <RichTextBox x:Name="DataTextBox" Grid.Column="2"  Grid.ColumnSpan="1" Margin="10,5,2,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
                 <RichTextBox.Resources>
@@ -110,10 +111,11 @@
                 </RichTextBox.Resources>
             </RichTextBox>
 
-            <GridSplitter Grid.Row="0" Grid.Column="3" Margin="5" Padding="5"
+            <GridSplitter x:Name="HexSplitter" Grid.Row="0" Grid.Column="3" Margin="5" Padding="5"
                   Width="3" Background="{DynamicResource DefaultTextColor}" 
                   VerticalAlignment="Stretch" 
-                  HorizontalAlignment="Center"/>
+                  HorizontalAlignment="Center"
+                  ShowsPreview="False"/>
 
             <Grid Grid.Column="4" Grid.ColumnSpan="1" >
                 <Grid.RowDefinitions>

@@ -23,8 +23,8 @@ namespace SerialMonitor
     {
         static SerialTerminal SerialTerminal = new SerialTerminal();
         static NetworkTerminal NetworkTerminal = new NetworkTerminal();
-        
-        static List<Page> pages = new ();
+
+        static List<Page> pages = new();
         private List<ExternalPage> windows = new();
 
         public string Path { get; private set; } = string.Empty;
@@ -92,7 +92,7 @@ namespace SerialMonitor
 
         private void ExWindowMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            ExternalPage externalPage = new(GetSelectedPage());
+            ExternalPage externalPage = new(GetSelectedPage(), this);
             externalPage.Show();
             windows.Add(externalPage);
         }
@@ -133,13 +133,13 @@ namespace SerialMonitor
         private void sidebar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             Page selected = GetSelectedPage();
-            NavFrame.Navigate(selected);
 
-            foreach (var exwin in windows) {
-                if (selected == exwin.ExPage) {
-                    exwin.Close();
-                }
-            }
+            var selectedWin = windows.FirstOrDefault(w => w.ExPage == selected);
+
+            if (selectedWin == null)
+                NavFrame.Navigate(selected);
+            else
+                selectedWin.Focus();
         }
 
         private Page GetSelectedPage()
@@ -185,6 +185,24 @@ namespace SerialMonitor
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             SerialTerminal.LoadPage();
+        }
+
+        public void DeleteWindow(int index)
+        {
+            windows[index].Close();
+            windows.RemoveAt(index);
+        }
+
+        public void DeleteWindow(ExternalPage window, bool close = false)
+        {
+            if (close)
+                window.Close();
+            windows.Remove(window);
+        }
+
+        private void NavFrame_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
+        {
+
         }
     }
 }

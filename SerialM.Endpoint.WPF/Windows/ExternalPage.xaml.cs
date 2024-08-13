@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SerialMonitor;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,11 +21,12 @@ namespace SerialM.Endpoint.WPF.Windows
     public partial class ExternalPage : Window
     {
         private Page _exPage;
-
-        public ExternalPage(Page page)
+        private MainWindow _mainWindow;
+        public ExternalPage(Page page, MainWindow mainWindow)
         {
             InitializeComponent();
             ExPage = page;
+            _mainWindow = mainWindow;
             PageFrame.Unloaded += (s,e) => Close();
         }
 
@@ -40,6 +42,11 @@ namespace SerialM.Endpoint.WPF.Windows
                     Title = _exPage.Title;
                 }
             }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            _mainWindow.DeleteWindow(this);
         }
     }
 }

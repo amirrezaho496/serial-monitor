@@ -593,6 +593,12 @@ namespace SerialM.Endpoint.WPF.Pages
             loadText();
         }
 
+        private void LogSplitter_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            //var size = LogSplitter.ActualWidth;
+            //InputTextBox.Text = size.ToString();
+        }
+
         private void saveText()
         {
             PageStorage.Save(PathExtentions.LogsPath, _textRanges.Select(x => new TextBoxInlineItem
