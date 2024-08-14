@@ -11,22 +11,35 @@
 
     <Page.Resources>
         <vald:IpAddressValidationConverter x:Key="IpAddressValidationConverter"/>
+        <vald:PortValidationConverter x:Key="PortValidationConverter"/>
+        <vald:IPPortValidatorConverter x:Key="IPPortValidatorConverter"/>
 
         <!-- Define Button Style for Valid and Invalid IP Address -->
-        <Style x:Key="ConnectButtonStyle" TargetType="Button">
+        <Style x:Key="ConnectButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Style.Triggers>
-                <!-- Valid IP Address -->
-                <DataTrigger Binding="{Binding Text, ElementName=InputIpTextBox, Converter={StaticResource IpAddressValidationConverter}}" Value="True">
+                <!-- Valid IP Address And Port -->
+                <DataTrigger>
+                    <DataTrigger.Binding>
+                        <MultiBinding Converter="{StaticResource IPPortValidatorConverter}">
+                            <Binding Path="Text" ElementName="PortTextBox" Converter="{StaticResource PortValidationConverter}" />
+                            <Binding Path="Text" ElementName="InputIpTextBox" Converter="{StaticResource IpAddressValidationConverter}" />
+                        </MultiBinding>
+                    </DataTrigger.Binding>
                     <Setter Property="IsEnabled" Value="True"/>
                 </DataTrigger>
                 <!-- Invalid IP Address -->
                 <DataTrigger Binding="{Binding Text, ElementName=InputIpTextBox, Converter={StaticResource IpAddressValidationConverter}}" Value="False">
                     <Setter Property="IsEnabled" Value="False"/>
                 </DataTrigger>
+
+                <!-- Invalid Port -->
+                <DataTrigger Binding="{Binding Text, ElementName=PortTextBox, Converter={StaticResource PortValidationConverter}}" Value="False">
+                    <Setter Property="IsEnabled" Value="False"/>
+                </DataTrigger>
+
                 <!-- Trigger for Server Mode -->
                 <DataTrigger Binding="{Binding SelectedItem.Content, ElementName=ModeComboBox}" Value="Server">
                     <Setter Property="Content" Value="Listen"/>
-                    <Setter Property="IsEnabled" Value="True"/>
                 </DataTrigger>
                 <!-- Trigger for Client Mode -->
                 <DataTrigger Binding="{Binding SelectedItem.Content, ElementName=ModeComboBox}" Value="Client">
@@ -35,18 +48,16 @@
             </Style.Triggers>
         </Style>
     </Page.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="36" MinHeight="36"/>
             <RowDefinition Height="10*"/>
             <RowDefinition Height="1*" MinHeight="30"/>
-            <RowDefinition Height="1*" MinHeight="40"/>
+            <RowDefinition Height="2*" MinHeight="50"/>
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0">
-            <Button x:Name="ConnectButton" DockPanel.Dock="Right" ClickMode="Release" VerticalAlignment="Stretch" Margin="10,0,10,0" HorizontalAlignment="Stretch"
-                Style="{StaticResource ConnectButtonStyle}"/>
 
             <WrapPanel Grid.Row="1"  Height="auto">
                 <!-- Mode Selection -->
@@ -59,43 +70,31 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedItem.Content, ElementName=ModeComboBox}" Value="Client">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding SelectedItem.Content, ElementName=ModeComboBox}" Value="Server">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-                    <!-- Ip Selection -->
-                    <Label Content="IP Address:" VerticalAlignment="Center" Margin="5,0,5,0" Height="26"/>
-                    <TextBox x:Name="InputIpTextBox" Margin="5,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="auto" Width="200">
-                        <TextBox.Style>
-                            <Style TargetType="TextBox">
-                                <Setter Property="Foreground" Value="{DynamicResource DefaultTextColor}"/>
-                                <Setter Property="Background" Value="{DynamicResource AltHigh}"/>
-                                <Style.Triggers>
-                                    <!-- Valid IP Address -->
-                                    <DataTrigger Binding="{Binding Text, ElementName=InputIpTextBox, Converter={StaticResource IpAddressValidationConverter}}" Value="True">
-                                        <Setter Property="Foreground" Value="{DynamicResource TextBoxSuccessColor}"/>
-                                    </DataTrigger>
-                                    <!-- Invalid IP Address -->
-                                    <DataTrigger Binding="{Binding Text, ElementName=InputIpTextBox, Converter={StaticResource IpAddressValidationConverter}}" Value="False">
-                                        <Setter Property="Foreground" Value="{DynamicResource TextBoxFailColor}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBox.Style>
-                    </TextBox>
+                    <Label Content="IP Address:" VerticalAlignment="Center"/>
+                    <TextBox x:Name="InputIpTextBox" Margin="5,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Left" Width="200"
+                             PreviewTextInput="InputIpTextBox_PreviewTextInput"
+                             TextChanged="InputIpTextBox_TextChanged"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Port: " VerticalAlignment="Center"/>
+                    <TextBox x:Name="PortTextBox" 
+                             PreviewTextInput="PortTextBox_PreviewTextInput"
+                             TextChanged="PortTextBox_TextChanged"
+                             Width="80"/>
                 </StackPanel>
 
             </WrapPanel>
+            <Button x:Name="ConnectButton" DockPanel.Dock="Right" ClickMode="Release" Margin="10,0,10,0" HorizontalAlignment="Right"
+                Style="{StaticResource ConnectButtonStyle}"/>
         </DockPanel>
-        
-        
+
+
+        <Grid Grid.Row="1">
+            <DataGrid Margin="5">
+            </DataGrid>
+        </Grid>
+
+        <TextBox Grid.Row="3" Margin="5"/>
     </Grid>
 </Page>

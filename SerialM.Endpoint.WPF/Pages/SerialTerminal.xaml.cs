@@ -1,5 +1,5 @@
-﻿using SerialM.Business.Extensions;
-using SerialM.Business.Utilities;
+﻿using SerialM.Business.Utilities;
+using SerialM.Business.Utilities.Extensions;
 using SerialM.Endpoint.WPF.Interfaces;
 using SerialM.Endpoint.WPF.Models;
 using System.Collections.ObjectModel;
@@ -294,12 +294,6 @@ namespace SerialM.Endpoint.WPF.Pages
             if (_scrollToEnd)
                 DataTextBox.ScrollToEnd();
         }
-
-        private static bool IsTextNumeric(string text)
-        {
-            Regex regex = new Regex("[^0-9]+"); // Regex that matches non-numeric text
-            return !regex.IsMatch(text);
-        }
         #endregion
 
         #region Click Events
@@ -574,7 +568,7 @@ namespace SerialM.Endpoint.WPF.Pages
 
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            e.Handled = !IsTextNumeric(e.Text);
+            e.Handled = !e.Text.IsNumeric();
         }
         #endregion
 
