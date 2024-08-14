@@ -9,8 +9,8 @@
     <SolidColorBrush x:Key="ReceiveColor" Color="White"/>
     <SolidColorBrush x:Key="SentColor" Color="#FFF2FF92"/>
     <SolidColorBrush x:Key="TimeColor" Color="#FFFFBFBF"/>
-    <SolidColorBrush x:Key="TextBoxSuccessColor" Color="#FF005300"/>
-    <SolidColorBrush x:Key="TextBoxFailColor" Color="#FF5E0000"/>
+    <SolidColorBrush x:Key="TextBoxSuccessColor" Color="#FF40FF40"/>
+    <SolidColorBrush x:Key="TextBoxFailColor" Color="#FFFF4141"/>
 
     <!--lisbox colors-->
     <SolidColorBrush x:Key="ListboxSelectedBack" Color="#FF3B5467"/>

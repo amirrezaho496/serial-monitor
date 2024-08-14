@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SerialM.Business.Extensions
+namespace SerialM.Business.Utilities.Extensions
 {
     public static class PathExtentions
     {
