@@ -21,7 +21,7 @@
         </Grid.RowDefinitions>
 
         <!-- Menu -->
-        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,444" Grid.RowSpan="2">
+        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,0" Grid.RowSpan="1">
             <MenuItem Header="_File">
                 <MenuItem Header="_Open" Click="OpenMenuItem_Click"/>
                 <MenuItem Header="_Save" Click="SaveMenuItem_Click"/>
@@ -46,8 +46,8 @@
 
         <ListBox SelectionMode="Single" SelectionChanged="sidebar_SelectionChanged" Grid.Row="1" Grid.Column="0" x:Name="sidebar">
             <ctrl:NavButton ToolTip="Serial Monitor" Margin="3" Padding="5" Icon="M3 3h18a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h16V5H4zm8 10h6v2h-6v-2zm-3.333-3L5.838 9.172l1.415-1.415L11.495 12l-4.242 4.243-1.415-1.415L8.667 12z"/>
-            <ctrl:NavButton ToolTip="Serial Monitor" Margin="3" Padding="5" Icon="M92,3124 L96,3124 L96,3120 L92,3120 L92,3124 Z M92,3138 L96,3138 L96,3134 L92,3134 L92,3138 Z M100,3138 L104,3138 L104,3134 L100,3134 L100,3138 Z M84,3138 L88,3138 L88,3134 L84,3134 L84,3138 Z M87,3132 L85,3132 L85,3128 L93,3128 L93,3126 L95,3126 L95,3128 L103,3128 L103,3132 L101,3132 L101,3130 L95,3130 L95,3132 L93,3132 L93,3130 L87,3130 L87,3132 Z"/>
-            <ctrl:NavButton ToolTip="Serial Monitor" Margin="3" Padding="5" Icon="M27.096,7.771l-5.993-5.994C20.673,1.347,20.078,1.1,19.469,1.1h-9.077c-1.274,0-2.31,1.036-2.31,2.31v1.54H6.54
+            <ctrl:NavButton ToolTip="Network Monitor" Margin="3" Padding="5" Icon="M92,3124 L96,3124 L96,3120 L92,3120 L92,3124 Z M92,3138 L96,3138 L96,3134 L92,3134 L92,3138 Z M100,3138 L104,3138 L104,3134 L100,3134 L100,3138 Z M84,3138 L88,3138 L88,3134 L84,3134 L84,3138 Z M87,3132 L85,3132 L85,3128 L93,3128 L93,3126 L95,3126 L95,3128 L103,3128 L103,3132 L101,3132 L101,3130 L95,3130 L95,3132 L93,3132 L93,3130 L87,3130 L87,3132 Z"/>
+            <ctrl:NavButton ToolTip="Page 2" Margin="3" Padding="5" Icon="M27.096,7.771l-5.993-5.994C20.673,1.347,20.078,1.1,19.469,1.1h-9.077c-1.274,0-2.31,1.036-2.31,2.31v1.54H6.54
 		c-1.274,0-2.31,1.036-2.31,2.31v21.33c0,1.274,1.036,2.31,2.31,2.31h15.07c1.274,0,2.31-1.036,2.31-2.31v-1.547h1.543
 		c1.274,0,2.31-1.036,2.31-2.31V9.404C27.773,8.787,27.533,8.207,27.096,7.771z M24.701,7.92h-3.238c-0.281,0-0.51-0.229-0.51-0.51
 		V4.172L24.701,7.92z M22.12,28.59c0,0.281-0.229,0.51-0.51,0.51H6.54c-0.281,0-0.51-0.229-0.51-0.51V7.26

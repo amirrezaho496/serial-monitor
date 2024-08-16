@@ -2,8 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:SerialM.Endpoint.WPF"
                     xmlns:ui="http://schemas.modernwpf.com/2019"
-                    xmlns:ctrl ="clr-namespace:SerialM.Endpoint.WPF.Controls">
+                    xmlns:ctrl ="clr-namespace:SerialM.Endpoint.WPF.ViewModels"
+                    xmlns:vald ="clr-namespace:SerialM.Endpoint.WPF.Validation">
 
+    <vald:HexValueConverter x:Key="HexValueConverter"/>
 
     <Style x:Key="DefaultTextStyle" TargetType="Span">
         <Setter Property="Foreground" Value="{DynamicResource DefaultTextColor}"/>
@@ -34,6 +36,9 @@
     <Style x:Key="TimeStyle" TargetType="Span">
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="Foreground" Value="{DynamicResource TimeColor}" />
+    </Style>
+
+    <Style x:Key="HexableTextStyle" TargetType="Run">
     </Style>
 
 </ResourceDictionary>

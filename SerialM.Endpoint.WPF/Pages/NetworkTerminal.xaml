@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:SerialM.Endpoint.WPF.Pages"
       xmlns:vald ="clr-namespace:SerialM.Endpoint.WPF.Validation"
+      xmlns:dd="urn:gong-wpf-dragdrop"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="NetworkTerminal">
@@ -51,10 +52,11 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="36" MinHeight="36"/>
-            <RowDefinition Height="10*"/>
-            <RowDefinition Height="1*" MinHeight="30"/>
-            <RowDefinition Height="2*" MinHeight="50"/>
+            <RowDefinition Height="auto" MinHeight="36"/>
+            <RowDefinition Height="390*"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="86*" MinHeight="60"/>
+            <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0">
@@ -89,12 +91,106 @@
                 Style="{StaticResource ConnectButtonStyle}"/>
         </DockPanel>
 
+        <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
 
-        <Grid Grid.Row="1">
-            <DataGrid Margin="5">
-            </DataGrid>
+            <Grid Margin="5" Grid.Column="0" Grid.Row="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="30"/>
+                </Grid.RowDefinitions>
+
+                <!-- ListView with buttons in each item -->
+                <ListView
+                    dd:DragDrop.IsDragSource="True" 
+                    dd:DragDrop.IsDropTarget="True"
+                    x:Name="ListView" Grid.Column="0" Grid.Row="0" Margin="10,10,0,10" >
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding Text}" Width="100" VerticalAlignment="Center" Margin="5"/>
+                                <Label Content="delay : " VerticalAlignment="Center" />
+                                <TextBox Text="{Binding Delay}" Width="50" Margin="5" PreviewTextInput="TextBox_PreviewTextInput"/>
+                                <Button Content="Send" Click="SendSavedCommand_Click" Tag="{Binding}" Margin="5"/>
+                                <CheckBox IsChecked="{Binding CanSend}" Content="Send in Auto" VerticalAlignment="Center" HorizontalAlignment="Center" Width="10" Margin="5"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Button x:Name="AddNewSendItem" Content="Add" Click="AddNewSendItem_Click" Margin="5,0,5,0"/>
+                    <Button x:Name="AutoRunBtn" Content="Auto Send" Click="AutoRunBtn_Click" Margin="5,0,5,0"/>
+                    <Button x:Name="RemoveBtn" Content="Remove" Click="RemoveBtn_Click" Margin="5,0,5,0"/>
+                </StackPanel>
+            </Grid>
+
+
+            <GridSplitter x:Name="LogSplitter" Grid.Row="0" Grid.Column="1" Margin="5" Padding="5"
+                  Width="3" Background="{DynamicResource DefaultTextColor}" 
+                  VerticalAlignment="Stretch" 
+                  HorizontalAlignment="Center"
+                  SizeChanged="LogSplitter_SizeChanged"/>
+            <!-- Data Display Area -->
+            <RichTextBox x:Name="DataTextBox" Grid.Column="2"  Grid.ColumnSpan="1" Margin="10,5,2,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
+                <RichTextBox.Resources>
+                    <Style TargetType="{x:Type Paragraph}">
+                        <Setter Property="Margin" Value="0"/>
+                    </Style>
+                </RichTextBox.Resources>
+            </RichTextBox>
+
+            <GridSplitter x:Name="HexSplitter" Grid.Row="0" Grid.Column="3" Margin="5" Padding="5"
+                  Width="3" Background="{DynamicResource DefaultTextColor}" 
+                  VerticalAlignment="Stretch" 
+                  HorizontalAlignment="Center"
+                  ShowsPreview="False"/>
+
+            <Grid Grid.Column="4" Grid.ColumnSpan="1" >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+                <DockPanel Margin="10"  Grid.Row="0">
+                    <Label HorizontalAlignment="Left" VerticalAlignment="Center" Content="Hex:" DockPanel.Dock="Left" Width="30"/>
+                </DockPanel>
+                <RichTextBox Grid.Row="1" x:Name="HexDataTextBox"  Margin="2,5,10,3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True">
+                    <RichTextBox.Resources>
+                        <Style TargetType="{x:Type Paragraph}">
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </RichTextBox.Resources>
+                </RichTextBox>
+                <DockPanel Margin="10,0,10,0" Grid.Row="2">
+                    <Button  x:Name="ToHex_button" Margin="2" DockPanel.Dock="Left"  Content="To Hex the Selection" Click="ToHex_button_Click"/>
+                    <Button x:Name="ClearHex_button" Content="Clear" Margin="2" DockPanel.Dock="Right" Width="64" Click="ClearHex_button_Click"/>
+                </DockPanel>
+            </Grid>
         </Grid>
 
-        <TextBox Grid.Row="3" Margin="5"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="10,0,0,0" Grid.RowSpan="1">
+
+            <CheckBox Content="HEX" x:Name="HEX_checkbox" Grid.Column="0" Margin="5,5,1,5" VerticalAlignment="Stretch" Unchecked="HEX_checkbox_Checked" Checked="HEX_checkbox_Checked"/>
+            <CheckBox Content="Scroll to End" x:Name="Scroll_checkbox" Margin="0,5,0,5" VerticalAlignment="Stretch" Unchecked="Scroll_checkbox_Checked" Checked="Scroll_checkbox_Checked"/>
+            <Button x:Name="Clear_button" Content="Clear" Click="Clear_button_Click"/>
+        </StackPanel>
+
+        <!-- Data Entry Area -->
+        <TextBox x:Name="InputTextBox" Grid.Row="3" Grid.Column="0"
+                 Margin="10"
+                 KeyDown="InputTextBox_KeyDown" MinHeight="33"
+                 PreviewKeyDown="InputTextBox_PreviewKeyDown"
+                 AcceptsReturn="True"/>
+        <StatusBar Grid.Row="4" Grid.RowSpan="1">
+            <ProgressBar  x:Name="mainSbar" Minimum="0" Maximum="100" Value="0"  Margin="10,0,10,0" Width="100" Height="10" HorizontalAlignment="Left" VerticalAlignment="center"/>
+        </StatusBar>
     </Grid>
 </Page>
