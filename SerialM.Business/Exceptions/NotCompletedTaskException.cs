@@ -9,7 +9,8 @@ namespace SerialM.Business.Exceptions
     [System.Serializable]
     public class NotCompletedTaskException : Exception
     {
-        public NotCompletedTaskException() { }
+        public NotCompletedTaskException() : base("the Task is not Completed...!")
+        { }
         public NotCompletedTaskException(string message) : base(message) { }
         public NotCompletedTaskException(string message, Exception inner) : base(message, inner) { }
         protected NotCompletedTaskException(
