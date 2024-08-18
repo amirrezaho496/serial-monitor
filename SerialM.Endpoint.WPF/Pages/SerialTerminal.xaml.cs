@@ -22,7 +22,7 @@ namespace SerialM.Endpoint.WPF.Pages
     /// <summary>
     /// Interaction logic for SerialTerminal.xaml
     /// </summary>
-    public partial class SerialTerminal : Page, ISaveablePage
+    public partial class SerialTerminal : Page, ISaveablePage, IDataPersistence
     {
 
         #region Data
@@ -435,44 +435,44 @@ namespace SerialM.Endpoint.WPF.Pages
             e.Handled = !e.Text.IsNumeric();
         }
         #endregion
-
-        #region Saving and Loading
-        public void SavePage()
-        {
-            saveConfig();
-            saveAutoSendItems();
-            saveText();
-        }
-
-        public void LoadPage()
-        {
-            loadConfig();
-            loadAutoSendItems();
-            loadText();
-        }
-
         private void LogSplitter_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             //var size = LogSplitter.ActualWidth;
             //InputTextBox.Text = size.ToString();
         }
 
-        private void saveText()
+        #region Saving and Loading
+        public void SavePage()
         {
-            PageStorage.Save(PathExtentions.LogsPath, _pageData.TextRanges.Select(x => new TextBoxInlineItem
+            SaveConfig();
+            SaveAutoSendItems();
+            SaveText();
+        }
+
+        public void LoadPage()
+        {
+            LoadConfig();
+            LoadAutoSendItems();
+            LoadText();
+        }
+
+
+        public void SaveText()
+        {
+            PageStorage.Save(PathExtentions.SerialLogsPath, _pageData.TextRanges.Select(x => new TextBoxInlineItem
             {
                 Text = x.TextRun.Text,
                 Time = x.TimeRun.Text,
                 ResourceKey = x.ResourceKey
             }));
         }
-        private async void loadText()
+        public async void LoadText()
         {
             await Task.Run(() =>
             {
                 _pageData.ClearTexts();
 
-                var loadedText = PageStorage.Load<List<TextBoxInlineItem>>(PathExtentions.LogsPath);
+                var loadedText = PageStorage.Load<List<TextBoxInlineItem>>(PathExtentions.SerialLogsPath);
                 SetSBar(loadedText.Count, 0, 0);
 
                 foreach (var item in loadedText)
@@ -486,7 +486,7 @@ namespace SerialM.Endpoint.WPF.Pages
                 HideSbar();
             });
         }
-        private void saveConfig()
+        public void SaveConfig()
         {
             var config = new SerialConfig()
             {
@@ -497,7 +497,7 @@ namespace SerialM.Endpoint.WPF.Pages
             };
             PageStorage.Save(PathExtentions.SerialConfigPath, config);
         }
-        private void loadConfig()
+        public void LoadConfig()
         {
             var config = PageStorage.Load<SerialConfig>(PathExtentions.SerialConfigPath);
             PortComboBox.SelectedValue = config.PortName;
@@ -505,13 +505,13 @@ namespace SerialM.Endpoint.WPF.Pages
             ParityComboBox.SelectedIndex = (int)config.Parity;
             StopBitComboBox.SelectedIndex = (int)config.StopBits;
         }
-        private void loadAutoSendItems()
+        public void LoadAutoSendItems()
         {
             _pageData.SendItems.Clear();
             var items = PageStorage.Load<ObservableCollection<SendListViewItem>>(PathExtentions.SendSerialItemsPath);
             _pageData.SendItems = items;
         }
-        private void saveAutoSendItems()
+        public void SaveAutoSendItems()
         {
             PageStorage.Save(PathExtentions.SendSerialItemsPath, _pageData.SendItems);
         }
