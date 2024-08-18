@@ -11,5 +11,7 @@ namespace SerialM.Endpoint.WPF.Interfaces
     {
         public void SavePage();
         public void LoadPage();
+
+
     }
 }

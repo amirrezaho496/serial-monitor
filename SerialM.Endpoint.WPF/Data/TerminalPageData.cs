@@ -53,7 +53,7 @@ namespace SerialM.Endpoint.WPF.Data
             set
             {
                 this._sendListViewItems = value;
-                _sendListView.ItemsSource = this._sendListViewItems;
+                SendListView.ItemsSource = this._sendListViewItems;
             }
         }
 
@@ -87,25 +87,32 @@ namespace SerialM.Endpoint.WPF.Data
             set => _hexText = value;
         }
 
+
+        public RichTextBox  RichTextBox { get => _richTextBox; private set => _richTextBox = value; }
+        public Paragraph    MainParagraph { get => mainParagraph; private set => mainParagraph = value; }
+        public Page         Page { get => _page; private set => _page = value; }
+        public ListView     SendListView { get => _sendListView; private set => _sendListView = value; }
+        public ProgressBar  ProgressBar { get => _progressBar; private set => _progressBar = value; }
+        public Dispatcher   Dispatcher { get => _dispatcher; private set => _dispatcher = value; }
         #endregion
 
 
         private RichTextBox _richTextBox;
-        private Paragraph mainParagraph = new();
-        private Page _page;
-        private ListView _sendListView;
+        private Paragraph   mainParagraph = new();
+        private Page        _page;
+        private ListView    _sendListView;
         private ProgressBar _progressBar;
-        private Dispatcher _dispatcher;
+        private Dispatcher  _dispatcher;
 
 
         public TerminalPageData(Page page, RichTextBox richTextBox, ListView sendListView, ProgressBar progressBar)
         {
-            _page = page;
-            _richTextBox = richTextBox;
-            _sendListView = sendListView;
-            this.mainParagraph = new();
-            _dispatcher = _page.Dispatcher;
-            _progressBar = progressBar;
+            Page = page;
+            RichTextBox = richTextBox;
+            SendListView = sendListView;
+            this.MainParagraph = new();
+            Dispatcher = Page.Dispatcher;
+            ProgressBar = progressBar;
             Initialize();
         }
 
@@ -119,20 +126,20 @@ namespace SerialM.Endpoint.WPF.Data
         private void InitializeListView()
         {
             SendItems = [new SendListViewItem()];
-            _sendListView.ItemsSource = SendItems;
+            SendListView.ItemsSource = SendItems;
         }
 
         private void InitializeTextBox()
         {
-            _richTextBox.Document.Blocks.Clear();
-            _richTextBox.Document.Blocks.Add(mainParagraph);
+            RichTextBox.Document.Blocks.Clear();
+            RichTextBox.Document.Blocks.Add(MainParagraph);
         }
 
         public void ClearTexts()
         {
-            _dispatcher.Invoke(() =>
+            Dispatcher.Invoke(() =>
             {
-                mainParagraph.Inlines.Clear();
+                MainParagraph.Inlines.Clear();
                 TextRanges.Clear();
             });
         }
@@ -155,29 +162,29 @@ namespace SerialM.Endpoint.WPF.Data
 
 
 
-            var start = _richTextBox.Document.ContentEnd;
-            Run run = new Run(text, _richTextBox.Document.ContentEnd);
+            var start = RichTextBox.Document.ContentEnd;
+            Run run = new Run(text, RichTextBox.Document.ContentEnd);
             Run timeInline = new Run(dateTime);
-            var runTime = new Span(timeInline, _richTextBox.Document.ContentEnd);
+            var runTime = new Span(timeInline, RichTextBox.Document.ContentEnd);
 
             if (string.IsNullOrEmpty(colorResourceKey))
                 colorResourceKey = DEFAULT_RESOURCEKEY;
 
-            runTime.Style = (Style)_page.FindResource(TIME_RESOURCEKEY);
+            runTime.Style = (Style)Page.FindResource(TIME_RESOURCEKEY);
 
             runTime.Inlines.Add(new Run(" : "));
             var span = new Span(runTime, start);
             span.Inlines.Add(run);
             span.Inlines.Add(new Run("\r"));
-            span.Style = (Style)_page.FindResource(colorResourceKey);
+            span.Style = (Style)Page.FindResource(colorResourceKey);
 
             //DataTextBox.Document.Blocks.Add(paragraph);
-            mainParagraph.Inlines.Add(span);
+            MainParagraph.Inlines.Add(span);
 
             _textRanges.Add(new TextboxItem { TextRun = run, TimeRun = timeInline, ResourceKey = colorResourceKey });
 
             if (ScrollToEnd)
-                _richTextBox.ScrollToEnd();
+                RichTextBox.ScrollToEnd();
         }
 
         public async void TaskTextProccess(Func<string, string> textProccess)
@@ -191,9 +198,9 @@ namespace SerialM.Endpoint.WPF.Data
                 for (int i = TextRanges.Count - 1; i >= last; i--)
                 {
                     var txt = TextRanges[i].TextRun;
-                    _dispatcher.Invoke(() =>
+                    Dispatcher.Invoke(() =>
                     {
-                        _progressBar.Value++;
+                        ProgressBar.Value++;
                         txt.Text = textProccess(txt.Text);
                     });
                 }
@@ -203,20 +210,20 @@ namespace SerialM.Endpoint.WPF.Data
 
         public void HideSbar()
         {
-            _dispatcher.Invoke(() =>
+            Dispatcher.Invoke(() =>
             {
-                _progressBar.Visibility = Visibility.Hidden;
+                ProgressBar.Visibility = Visibility.Hidden;
             });
         }
 
         public void SetSBar(int max, int min = 0, int val = 0)
         {
-            _dispatcher.Invoke(() =>
+            Dispatcher.Invoke(() =>
             {
-                _progressBar.Visibility = Visibility.Visible;
-                _progressBar.Minimum = min;
-                _progressBar.Maximum = max;
-                _progressBar.Value = val;
+                ProgressBar.Visibility = Visibility.Visible;
+                ProgressBar.Minimum = min;
+                ProgressBar.Maximum = max;
+                ProgressBar.Value = val;
             });
         }
 
@@ -258,8 +265,8 @@ namespace SerialM.Endpoint.WPF.Data
                         if (item.Delay > 0)
                             await Task.Delay(item.Delay, cancellationToken); // Pass the cancellation token
 
-                        _dispatcher.Invoke(() => sendData(item.Text));
-                        _dispatcher.Invoke(() => _sendListView.SelectedItem = item);
+                        Dispatcher.Invoke(() => sendData(item.Text));
+                        Dispatcher.Invoke(() => SendListView.SelectedItem = item);
                     }
                 }
                 catch (OperationCanceledException)
