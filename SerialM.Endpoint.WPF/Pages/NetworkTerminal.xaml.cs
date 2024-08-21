@@ -1,16 +1,20 @@
 ﻿using SerialM.Business.Exceptions;
 using SerialM.Business.Network;
+using SerialM.Business.Network.Interfaces;
 using SerialM.Business.Utilities;
 using SerialM.Business.Utilities.Extensions;
 using SerialM.Endpoint.WPF.Data;
 using SerialM.Endpoint.WPF.Data.Models;
 using SerialM.Endpoint.WPF.Interfaces;
 using SerialM.Endpoint.WPF.Models;
+using SerialM.Endpoint.WPF.Windows;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO.Ports;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,11 +32,15 @@ namespace SerialM.Endpoint.WPF.Pages
     /// <summary>
     /// Interaction logic for NetworkTerminal.xaml
     /// </summary>
-    public partial class NetworkTerminal : Page,ISaveablePage, IDataPersistence
+    public partial class NetworkTerminal : Page, ISaveablePage, IDataPersistence, INotifyPropertyChanged
     {
         #region Data
         private System.Timers.Timer _portCheckTimer;
         TerminalPageData _pageData;
+        private INetworkDevice _networkDevice;
+        private bool _isConnected = false;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
         #endregion
 
         #region Property
@@ -41,7 +49,7 @@ namespace SerialM.Endpoint.WPF.Pages
             get => InputIpTextBox.Text;
             set
             {
-                if (InputIpTextBox.Text.IsIPAddress(out _))
+                if (value.IsIPAddress(out _))
                 {
                     InputIpTextBox.Text = value;
                 }
@@ -55,7 +63,6 @@ namespace SerialM.Endpoint.WPF.Pages
         {
             get => (NetworkMode)Enum.Parse(typeof(NetworkMode), ModeComboBox.SelectedItem.ToString());
             set => ModeComboBox.SelectedIndex = (int)value;
-
         }
 
         private int InputPort
@@ -63,12 +70,22 @@ namespace SerialM.Endpoint.WPF.Pages
             get => int.Parse(PortTextBox.Text);
             set
             {
-                if (InputIpTextBox.Text.IsValidPort(out _))
+                if (value.ToString().IsValidPort(out _))
                 {
-                    InputIpTextBox.Text = value.ToString();
+                    PortTextBox.Text = value.ToString();
                 }
                 else
                     throw new FormatException("The input is not a valid Port Number.");
+            }
+        }
+
+        public bool IsConnected
+        {
+            get => _isConnected;
+            set
+            {
+                _isConnected = value;
+                OnPropertyChanged();
             }
         }
         #endregion
@@ -78,6 +95,8 @@ namespace SerialM.Endpoint.WPF.Pages
             InitializeComponent();
 
             _pageData = new(this, DataTextBox, ListView, mainSbar);
+            LoadNModeInputs();
+            Scroll_checkbox.IsChecked = true;
         }
 
         #region Validation Events
@@ -136,7 +155,7 @@ namespace SerialM.Endpoint.WPF.Pages
                 return;
             }
 
-             await _pageData.StartAutoSendItems(SendData, OnStartAutoSend, OnEndOrCancelAutoSend);
+            await _pageData.StartAutoSendItems(SendData, OnStartAutoSend, OnEndOrCancelAutoSend);
         }
 
         private void ToHex_button_Click(object sender, RoutedEventArgs e)
@@ -189,6 +208,53 @@ namespace SerialM.Endpoint.WPF.Pages
                 SendData(item.Text);
             }
         }
+
+        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            IsConnected = !IsConnected;
+
+            if (!IsConnected)
+            {
+                Disconnect();
+                return;
+            }
+
+            if (InputNetworkMode == NetworkMode.Server)
+            {
+                var server = new NetworkServer();
+                server.OnServerStarted += OnNetworkStarted;
+                server.OnMessageReceived += OnMessageRecieved;
+                server.OnClientConnected += (msg) =>
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        _pageData.AppendLineToRichTextBox(msg, TerminalPageData.SUCCESS_RESOURCEKEY);
+                    });
+                };
+
+                server.OnClientDisconnected += OnNetworkDisconnected;
+                server.OnStartError += OnNetworkStartError;
+
+                _networkDevice = server;
+            }
+            else
+            {
+                var client = new NetworkClient();
+                client.OnClientConnected += OnNetworkStarted;
+                client.OnMessageReceived += OnMessageRecieved;
+                client.OnClientDisconnected += OnNetworkDisconnected;
+                client.OnStartError += OnNetworkStartError;
+
+                _networkDevice = client;
+            }
+
+            _networkDevice.StartAsync(InputIp, InputPort);
+            ConnectButton.Content = "Disconnect";
+        }
+        private void AddCopySendItem_Click(object sender, RoutedEventArgs e)
+        {
+            _pageData.AddCopySendItem(_pageData.SendListView.SelectedIndex);
+        }
         #endregion
 
         #region Preview Events
@@ -226,12 +292,15 @@ namespace SerialM.Endpoint.WPF.Pages
                 if (_pageData.HexText)
                     return s.ToHex().Replace("0A", "\r");
                 else
-                    return s.FromHex().Replace("\r", "0A");
+                    return s.Replace("\r", "0A").FromHex();
             });
         }
 
         private void Scroll_checkbox_Checked(object sender, RoutedEventArgs e)
         {
+            if (_pageData == null)
+                return;
+
             _pageData.ScrollToEnd = (bool)Scroll_checkbox.IsChecked;
             //Scroll_checkbox.IsChecked = _scrollToEnd;
 
@@ -254,13 +323,51 @@ namespace SerialM.Endpoint.WPF.Pages
 
         private void SendData()
         {
+            if (_networkDevice == null) return;
+            if (_networkDevice.Connected && !string.IsNullOrWhiteSpace(InputTextBox.Text))
+            {
+                _networkDevice.SendMessageAsync(InputTextBox.Text + '\n');
+                _pageData.AppendLineToRichTextBox($"{InputTextBox.Text.Replace("\n", "\n    ")}\n", TerminalPageData.SENT_RESOURCEKEY);
+                InputTextBox.Clear();
+            }
         }
 
         private void SendData(string text)
         {
+            _networkDevice.SendMessageAsync(text + '\n');
+            string msg = $"Sent : {text}";
+            _pageData.AppendLineToRichTextBox(msg, TerminalPageData.SENT_RESOURCEKEY);
         }
 
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
+        private void OnNetworkStarted(string msg)
+        {
+            _pageData.AppendLineToRichTextBox(msg, TerminalPageData.SUCCESS_RESOURCEKEY);
+        }
+
+        private void OnMessageRecieved(string msg)
+        {
+            _pageData.AppendLineToRichTextBox(msg);
+        }
+
+        private void OnNetworkDisconnected(string msg)
+        {
+            _pageData.AppendLineToRichTextBox(msg, TerminalPageData.FAIL_RESOURCEKEY);
+            _networkDevice.Dispose();
+            Disconnect();
+        }
+        private void OnNetworkStartError(string msg)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                _pageData.AppendLineToRichTextBox(msg, TerminalPageData.FAIL_RESOURCEKEY);
+            });
+            Disconnect();
+        }
         private void OnEndOrCancelAutoSend()
         {
             // Revert the button text and state after completion or cancellation
@@ -278,6 +385,16 @@ namespace SerialM.Endpoint.WPF.Pages
             {
                 AutoRunBtn.Content = "Cancel"; // Change button text to "Cancel"
                 RemoveBtn.IsEnabled = false;
+            });
+        }
+
+        private void Disconnect()
+        {
+            IsConnected = false;
+            _networkDevice.Dispose();
+            Dispatcher.Invoke(() =>
+            {
+                ConnectButton.Content = "Connect";
             });
         }
         #endregion
@@ -311,7 +428,10 @@ namespace SerialM.Endpoint.WPF.Pages
         }
         public async void LoadText()
         {
-            await Task.Run(() =>
+            //var loading = new LoadingWindow();
+            //loading.Show();
+            //loading.Focus();
+             await Task.Run(() =>
             {
                 _pageData.ClearTexts();
 
@@ -322,12 +442,13 @@ namespace SerialM.Endpoint.WPF.Pages
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        mainSbar.Value += 1;
-                        _pageData.AppendLineToRichTextBox(item.Text, item.ResourceKey, item.Time);
+                        _pageData.SbarValue++;
                     });
+                    _pageData.AppendLineToRichTextBox(item.Text, item.ResourceKey, item.Time);
                 }
                 _pageData.HideSbar();
             });
+            //loading.Close();
         }
         public void SaveConfig()
         {
@@ -358,6 +479,5 @@ namespace SerialM.Endpoint.WPF.Pages
             PageStorage.Save(PathExtentions.SendNetworkItemsPath, _pageData.SendItems);
         }
         #endregion
-
     }
 }

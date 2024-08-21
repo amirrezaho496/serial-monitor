@@ -39,12 +39,16 @@
                 </DataTrigger>
 
                 <!-- Trigger for Server Mode -->
-                <DataTrigger Binding="{Binding SelectedItem.Content, ElementName=ModeComboBox}" Value="Server">
+                <DataTrigger Binding="{Binding SelectedItem, ElementName=ModeComboBox}" Value="Server">
                     <Setter Property="Content" Value="Listen"/>
                 </DataTrigger>
                 <!-- Trigger for Client Mode -->
-                <DataTrigger Binding="{Binding SelectedItem.Content, ElementName=ModeComboBox}" Value="Client">
+                <DataTrigger Binding="{Binding SelectedItem, ElementName=ModeComboBox}" Value="Client">
                     <Setter Property="Content" Value="Connect"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=IsConnected}" Value="True">
+                    <Setter Property="Content" Value="Disconnect"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -66,8 +70,6 @@
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Mode:" VerticalAlignment="Center" Margin="5,0,5,0" Height="26"/>
                     <ComboBox x:Name="ModeComboBox" SelectedIndex="0" Grid.Row="1" Grid.Column="1" Margin="5,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="30">
-                        <ComboBoxItem Content="Server"/>
-                        <ComboBoxItem Content="Client"/>
                     </ComboBox>
                 </StackPanel>
 
@@ -87,7 +89,7 @@
                 </StackPanel>
 
             </WrapPanel>
-            <Button x:Name="ConnectButton" DockPanel.Dock="Right" ClickMode="Release" Margin="10,0,10,0" HorizontalAlignment="Right"
+            <Button x:Name="ConnectButton" DockPanel.Dock="Right" ClickMode="Release" Click="ConnectButton_Click" Margin="10,0,10,0" HorizontalAlignment="Right"
                 Style="{StaticResource ConnectButtonStyle}"/>
         </DockPanel>
 
@@ -125,8 +127,9 @@
                 </ListView>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Button x:Name="AddNewSendItem" Content="Add" Click="AddNewSendItem_Click" Margin="5,0,5,0"/>
                     <Button x:Name="AutoRunBtn" Content="Auto Send" Click="AutoRunBtn_Click" Margin="5,0,5,0"/>
+                    <Button x:Name="AddNewSendItem" Content="New" Click="AddNewSendItem_Click" Margin="5,0,5,0"/>
+                    <Button x:Name="AddCopySendItem" Content="Copy" Click="AddCopySendItem_Click" Margin="5,0,5,0"/>
                     <Button x:Name="RemoveBtn" Content="Remove" Click="RemoveBtn_Click" Margin="5,0,5,0"/>
                 </StackPanel>
             </Grid>
@@ -179,7 +182,7 @@
         <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="10,0,0,0" Grid.RowSpan="1">
 
             <CheckBox Content="HEX" x:Name="HEX_checkbox" Grid.Column="0" Margin="5,5,1,5" VerticalAlignment="Stretch" Unchecked="HEX_checkbox_Checked" Checked="HEX_checkbox_Checked"/>
-            <CheckBox Content="Scroll to End" x:Name="Scroll_checkbox" Margin="0,5,0,5" VerticalAlignment="Stretch" Unchecked="Scroll_checkbox_Checked" Checked="Scroll_checkbox_Checked"/>
+            <CheckBox Content="Scroll to End" x:Name="Scroll_checkbox" Margin="0,5,0,5"  VerticalAlignment="Stretch" Unchecked="Scroll_checkbox_Checked" Checked="Scroll_checkbox_Checked"/>
             <Button x:Name="Clear_button" Content="Clear" Click="Clear_button_Click"/>
         </StackPanel>
 

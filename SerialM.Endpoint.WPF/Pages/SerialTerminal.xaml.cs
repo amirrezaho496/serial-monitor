@@ -5,6 +5,7 @@ using SerialM.Endpoint.WPF.Data;
 using SerialM.Endpoint.WPF.Interfaces;
 using SerialM.Endpoint.WPF.Models;
 using SerialM.Endpoint.WPF.Validation;
+using SerialM.Endpoint.WPF.Windows;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Metrics;
 using System.IO.Ports;
@@ -178,6 +179,26 @@ namespace SerialM.Endpoint.WPF.Pages
                 _pageData.AppendLineToRichTextBox($"Sent: {text.Replace("\n", "\n    ")}\n", TerminalPageData.SENT_RESOURCEKEY);
             }
         }
+
+        private void OnEndOrCancelAutoSend()
+        {
+            // Revert the button text and state after completion or cancellation
+            Dispatcher.Invoke(() =>
+            {
+                RemoveBtn.IsEnabled = true;
+                AutoRunBtn.Content = "Auto Send";
+                AutoRunBtn.IsEnabled = true;
+            });
+        }
+
+        private void OnStartAutoSend()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                AutoRunBtn.Content = "Cancel"; // Change button text to "Cancel"
+                RemoveBtn.IsEnabled = false;
+            });
+        }
         #endregion
 
         #region Click Events
@@ -292,24 +313,9 @@ namespace SerialM.Endpoint.WPF.Pages
             await _pageData.StartAutoSendItems(SendData, OnStartAutoSend, OnEndOrCancelAutoSend);
         }
 
-        private void OnEndOrCancelAutoSend()
+        private void AddCopySendItem_Click(object sender, RoutedEventArgs e)
         {
-            // Revert the button text and state after completion or cancellation
-            Dispatcher.Invoke(() =>
-            {
-                RemoveBtn.IsEnabled = true;
-                AutoRunBtn.Content = "Auto Send";
-                AutoRunBtn.IsEnabled = true;
-            });
-        }
-
-        private void OnStartAutoSend()
-        {
-            Dispatcher.Invoke(() =>
-            {
-                AutoRunBtn.Content = "Cancel"; // Change button text to "Cancel"
-                RemoveBtn.IsEnabled = false;
-            });
+            _pageData.AddCopySendItem(_pageData.SendListView.SelectedIndex);
         }
         #endregion
 
@@ -374,7 +380,7 @@ namespace SerialM.Endpoint.WPF.Pages
                 if (_pageData.HexText)
                     return s.ToHex().Replace("0A", "\r");
                 else
-                    return s.FromHex().Replace("\r", "0A");
+                    return s.Replace("\r", "0A").FromHex();
             });
 
         }
@@ -468,23 +474,27 @@ namespace SerialM.Endpoint.WPF.Pages
         }
         public async void LoadText()
         {
+            //var loading = new LoadingWindow();
+            //loading.Show();
+            //loading.Focus();
             await Task.Run(() =>
             {
                 _pageData.ClearTexts();
 
                 var loadedText = PageStorage.Load<List<TextBoxInlineItem>>(PathExtentions.SerialLogsPath);
-                SetSBar(loadedText.Count, 0, 0);
+                _pageData.SetSBar(loadedText.Count, 0, 0);
 
                 foreach (var item in loadedText)
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        mainSbar.Value += 1;
+                        _pageData.SbarValue++;
                         _pageData.AppendLineToRichTextBox(item.Text, item.ResourceKey, item.Time);
                     });
                 }
-                HideSbar();
+                _pageData.HideSbar();
             });
+            //loading.Close();
         }
         public void SaveConfig()
         {

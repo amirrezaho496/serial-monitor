@@ -91,6 +91,7 @@
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Button x:Name="AddNewSendItem" Content="Add" Click="AddNewSendItem_Click" Margin="5,0,5,0"/>
+                    <Button x:Name="AddCopySendItem" Content="Copy" Click="AddCopySendItem_Click" Margin="5,0,5,0"/>
                     <Button x:Name="AutoRunBtn" Content="Auto Send" Click="AutoRunBtn_Click" Margin="5,0,5,0"/>
                     <Button x:Name="RemoveBtn" Content="Remove" Click="RemoveBtn_Click" Margin="5,0,5,0"/>
                 </StackPanel>

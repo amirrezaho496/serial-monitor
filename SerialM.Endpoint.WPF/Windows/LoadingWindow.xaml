@@ -1,0 +1,17 @@
+﻿<Window x:Class="SerialM.Endpoint.WPF.Windows.LoadingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SerialM.Endpoint.WPF.Windows"
+        mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        Title="LoadingWindow" Height="242" Width="758" ResizeMode="CanMinimize" SizeToContent="Height">
+    
+    <StackPanel VerticalAlignment="Top" Height="75">
+        <Label Name="SbarLabel" Content="Label" HorizontalAlignment="Left" RenderTransformOrigin="1.2,0.571" Width="36"/>
+        <Label Name="SbarInfo" Content="Label" HorizontalAlignment="Left" RenderTransformOrigin="1.2,0.571" Width="36"/>
+        <ProgressBar x:Name="mainSbar" HorizontalAlignment="Center" Height="20" Width="577"/>
+    </StackPanel>
+</Window>

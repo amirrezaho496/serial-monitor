@@ -5,10 +5,11 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using SerialM.Business.Network.Interfaces;
 
 namespace SerialM.Business.Network
 {
-    public class NetworkClient
+    public class NetworkClient : INetworkDevice
     {
         private TcpClient _client;
 
@@ -22,40 +23,82 @@ namespace SerialM.Business.Network
         /// </summary>
         public event Action<string>? OnMessageReceived;
 
-        public async Task ConnectToServer(string ipAddress, int port)
+        /// <summary>
+        /// Occurs when the client gets disconnected from the server.
+        /// </summary>
+        public event Action<string>? OnClientDisconnected;
+
+        /// <summary>
+        /// Event triggered when a client disconnects from the server.
+        /// </summary>
+        public event Action<string>? OnStartError;
+
+
+        public bool Connected => _client.Connected;
+
+        public async void StartAsync(string ipAddress, int port)
         {
             _client = new TcpClient();
-            await _client.ConnectAsync(IPAddress.Parse(ipAddress), port);
-            OnClientConnected?.Invoke("Connected to server...");
+            try
+            {
+                await _client.ConnectAsync(IPAddress.Parse(ipAddress), port);
+            }
+            catch (Exception ex)
+            {
+                OnStartError?.Invoke(ex.Message);
+                return;
+            }
+            OnClientConnected?.Invoke($"Connected to {ipAddress}:{port}");
+            ReceiveMessageAsync();
         }
 
-        public async Task SendMessageAsync(string message)
+        public async void SendMessageAsync(string message)
         {
-            if (_client == null)
-                throw new InvalidOperationException("Not connected to a server.");
+            if (_client == null || !_client.Connected)
+                OnClientDisconnected?.Invoke("Not connected to a server.");
 
             var stream = _client.GetStream();
             var data = Encoding.UTF8.GetBytes(message);
             await stream.WriteAsync(data, 0, data.Length);
         }
 
-        public async Task ReceiveMessageAsync()
+        public async void ReceiveMessageAsync()
         {
             if (_client == null)
-                throw new InvalidOperationException("Not connected to a server.");
+                OnClientDisconnected?.Invoke("Not connected to a server.");
 
             var stream = _client.GetStream();
-            var buffer = new byte[1024];
+            var buffer = new byte[2048];
 
-            while (true)
+            await Task.Run(async () =>
             {
-                var byteCount = await stream.ReadAsync(buffer, 0, buffer.Length);
-                if (byteCount == 0)
-                    break; // Server disconnected
+                while (true)
+                {
+                    try
+                    {
+                        var byteCount = await stream.ReadAsync(buffer, 0, buffer.Length);
+                        if (byteCount == 0)
+                        {
+                            OnClientDisconnected?.Invoke("Server Disconnected ...");
+                            break; // Server disconnected
+                        }
 
-                var message = Encoding.UTF8.GetString(buffer, 0, byteCount);
-                OnMessageReceived?.Invoke(message);
-            }
+                        var message = Encoding.UTF8.GetString(buffer, 0, byteCount);
+                        OnMessageReceived?.Invoke(message);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnClientDisconnected?.Invoke($"Disconnected : {ex.Message}");
+                        break;
+                    }
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            _client.Close();
+            _client.Dispose();
         }
     }
 }

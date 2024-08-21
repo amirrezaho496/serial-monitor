@@ -1,6 +1,7 @@
 ﻿using SerialM.Business.Exceptions;
 using SerialM.Business.Utilities;
 using SerialM.Endpoint.WPF.Models;
+using SerialM.Endpoint.WPF.Windows;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -87,6 +88,11 @@ namespace SerialM.Endpoint.WPF.Data
             set => _hexText = value;
         }
 
+        public double SbarValue
+        {
+            get => ProgressBar.Value;
+            set => Dispatcher.Invoke(()=> ProgressBar.Value = value);
+        }
 
         public RichTextBox  RichTextBox { get => _richTextBox; private set => _richTextBox = value; }
         public Paragraph    MainParagraph { get => mainParagraph; private set => mainParagraph = value; }
@@ -103,7 +109,7 @@ namespace SerialM.Endpoint.WPF.Data
         private ListView    _sendListView;
         private ProgressBar _progressBar;
         private Dispatcher  _dispatcher;
-
+        private LoadingWindow _loadingWindow;
 
         public TerminalPageData(Page page, RichTextBox richTextBox, ListView sendListView, ProgressBar progressBar)
         {
@@ -151,40 +157,58 @@ namespace SerialM.Endpoint.WPF.Data
             else
                 throw new NotCompletedTaskException("Auto run is not completed.");
         }
+        /// <summary>
+        /// Adds a new item to the SendItems list by copying an existing item from the specified index.
+        /// If no index is provided, the last item in the list is copied.
+        /// </summary>
+        /// <param name="copyFromIndex">The index of the item to copy. If null, the last item in the list is copied.</param>
+        /// <exception cref="NotCompletedTaskException">Thrown when the auto-send process has not been completed.</exception>
+        public void AddCopySendItem(int? copyFromIndex = null)
+        {
+            if (copyFromIndex == null || copyFromIndex < 0)
+                copyFromIndex = SendItems.Count - 1; // set to last one
+            if (IsAutoSendCompleted)
+                SendItems.Add(SendListViewItem.Copy(SendItems[(int)copyFromIndex]));
+            else
+                throw new NotCompletedTaskException("Auto run is not completed.");
+        }
 
         public void AppendLineToRichTextBox(string text, string colorResourceKey = "", string dateTime = "")
         {
-            if (HexText)
-                text = text.ToHex();/*.Replace("0A", "\r");*/
+            Dispatcher.Invoke(() =>
+            {
+                if (HexText)
+                    text = text.ToHex();/*.Replace("0A", "\r");*/
 
-            if (dateTime == "")
-                dateTime = DateTime.Now.ToString("HH:mm:ss:ffff");
+                if (dateTime == "")
+                    dateTime = DateTime.Now.ToString("HH:mm:ss:ffff");
 
 
 
-            var start = RichTextBox.Document.ContentEnd;
-            Run run = new Run(text, RichTextBox.Document.ContentEnd);
-            Run timeInline = new Run(dateTime);
-            var runTime = new Span(timeInline, RichTextBox.Document.ContentEnd);
+                var start = RichTextBox.Document.ContentEnd;
+                Run run = new Run(text, RichTextBox.Document.ContentEnd);
+                Run timeInline = new Run(dateTime);
+                var runTime = new Span(timeInline, RichTextBox.Document.ContentEnd);
 
-            if (string.IsNullOrEmpty(colorResourceKey))
-                colorResourceKey = DEFAULT_RESOURCEKEY;
+                if (string.IsNullOrEmpty(colorResourceKey))
+                    colorResourceKey = DEFAULT_RESOURCEKEY;
 
-            runTime.Style = (Style)Page.FindResource(TIME_RESOURCEKEY);
+                runTime.Style = (Style)Page.FindResource(TIME_RESOURCEKEY);
 
-            runTime.Inlines.Add(new Run(" : "));
-            var span = new Span(runTime, start);
-            span.Inlines.Add(run);
-            span.Inlines.Add(new Run("\r"));
-            span.Style = (Style)Page.FindResource(colorResourceKey);
+                runTime.Inlines.Add(new Run(" : "));
+                var span = new Span(runTime, start);
+                span.Inlines.Add(run);
+                span.Inlines.Add(new Run("\r"));
+                span.Style = (Style)Page.FindResource(colorResourceKey);
 
-            //DataTextBox.Document.Blocks.Add(paragraph);
-            MainParagraph.Inlines.Add(span);
+                //DataTextBox.Document.Blocks.Add(paragraph);
+                MainParagraph.Inlines.Add(span);
 
-            _textRanges.Add(new TextboxItem { TextRun = run, TimeRun = timeInline, ResourceKey = colorResourceKey });
+                _textRanges.Add(new TextboxItem { TextRun = run, TimeRun = timeInline, ResourceKey = colorResourceKey });
 
-            if (ScrollToEnd)
-                RichTextBox.ScrollToEnd();
+                if (ScrollToEnd)
+                    RichTextBox.ScrollToEnd();
+            });
         }
 
         public async void TaskTextProccess(Func<string, string> textProccess)
@@ -200,6 +224,7 @@ namespace SerialM.Endpoint.WPF.Data
                     var txt = TextRanges[i].TextRun;
                     Dispatcher.Invoke(() =>
                     {
+                        //ProgressBar.Value++;
                         ProgressBar.Value++;
                         txt.Text = textProccess(txt.Text);
                     });
@@ -216,8 +241,11 @@ namespace SerialM.Endpoint.WPF.Data
             });
         }
 
-        public void SetSBar(int max, int min = 0, int val = 0)
+        public void SetSBar(int max, int min = 0, int val = 0, ProgressBar progressBar = null)
         {
+            if (progressBar != null)
+                ProgressBar = progressBar;
+
             Dispatcher.Invoke(() =>
             {
                 ProgressBar.Visibility = Visibility.Visible;

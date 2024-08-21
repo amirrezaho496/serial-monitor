@@ -12,5 +12,14 @@ namespace SerialM.Endpoint.WPF.Models
         public bool CanSend { get; set; } = true;
         public int Delay { get; set; } = 0;
 
+        public static SendListViewItem Copy(SendListViewItem item)
+        {
+            return new SendListViewItem
+            {
+                Text = item.Text,
+                CanSend = item.CanSend,
+                Delay = item.Delay
+            };
+        }
     }
 }

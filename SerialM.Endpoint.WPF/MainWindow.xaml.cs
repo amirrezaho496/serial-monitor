@@ -158,9 +158,9 @@ namespace SerialMonitor
 
         private void CloseAllWindows()
         {
-            foreach (var win in windows)
+            while (windows.Count > 0)
             {
-                win.Close();
+                windows.FirstOrDefault()?.Close();
             }
         }
 
@@ -174,17 +174,29 @@ namespace SerialMonitor
                 }
             }
         }
+        private void LoadingAllPages()
+        {
+            foreach (var page in pages)
+            {
+                if (page is ISaveablePage)
+                {
+                    ((ISaveablePage)page).LoadPage();
+                }
+            }
+        }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            SerialTerminal.SavePage();
+            SavingAllPages();
 
             CloseAllWindows();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            SerialTerminal.LoadPage();
+            //SerialTerminal.LoadPage();
+            LoadingAllPages();
+            sidebar.SelectedIndex = 0;
         }
 
         public void DeleteWindow(int index)
