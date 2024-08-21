@@ -9,6 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Themes\add.png" />
+    <None Remove="Themes\add_w.png" />
+    <None Remove="Themes\bin.png" />
+    <None Remove="Themes\bin_w.png" />
+    <None Remove="Themes\copy_w.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="gong-wpf-dragdrop" Version="3.2.1" />
     <PackageReference Include="ModernWpfUI" Version="0.9.6" />
     <PackageReference Include="SharpVectors.Wpf" Version="1.8.4.2" />
@@ -17,6 +25,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SerialM.Business\SerialM.Business.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Themes\Icons\add.png" />
+    <Resource Include="Themes\Icons\add_w.png" />
+    <Resource Include="Themes\Icons\bin.png" />
+    <Resource Include="Themes\Icons\bin_w.png" />
+    <Resource Include="Themes\Icons\copy.png" />
+    <Resource Include="Themes\Icons\copy_w.png" />
   </ItemGroup>
 
 </Project>

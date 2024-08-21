@@ -315,7 +315,7 @@ namespace SerialM.Endpoint.WPF.Pages
 
         private void AddCopySendItem_Click(object sender, RoutedEventArgs e)
         {
-            _pageData.AddCopySendItem(_pageData.SendListView.SelectedIndex);
+            _pageData.AddCopyOfSelectedItems();
         }
         #endregion
 
@@ -363,12 +363,7 @@ namespace SerialM.Endpoint.WPF.Pages
 
         private void RemoveBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ListView.SelectedItems.Count == 0)
-                return;
-
-            var selectedIndex = ListView.SelectedIndex;
-
-            _pageData.SendItems.RemoveAt(selectedIndex);
+            _pageData.RemoveSelectedItems();
         }
 
         private void HEX_checkbox_Checked(object sender, RoutedEventArgs e)

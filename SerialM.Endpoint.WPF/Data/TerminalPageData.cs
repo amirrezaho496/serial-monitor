@@ -165,12 +165,29 @@ namespace SerialM.Endpoint.WPF.Data
         /// <exception cref="NotCompletedTaskException">Thrown when the auto-send process has not been completed.</exception>
         public void AddCopySendItem(int? copyFromIndex = null)
         {
+            
             if (copyFromIndex == null || copyFromIndex < 0)
                 copyFromIndex = SendItems.Count - 1; // set to last one
+            int index = (int)copyFromIndex.Value;
             if (IsAutoSendCompleted)
-                SendItems.Add(SendListViewItem.Copy(SendItems[(int)copyFromIndex]));
+                SendItems.Insert(index, SendListViewItem.Copy(SendItems[index]));
             else
                 throw new NotCompletedTaskException("Auto run is not completed.");
+        }
+
+        public void AddCopyOfSelectedItems()
+        {
+            foreach (var item in SendListView.SelectedItems)
+            {
+                int index = SendListView.Items.IndexOf(item);
+                AddCopySendItem(index);
+            }
+        }
+
+        public void RemoveSelectedItems()
+        {
+            while (SendListView.SelectedItems.Count > 0)
+                SendItems.Remove((SendListViewItem)SendListView.SelectedItems[0]);
         }
 
         public void AppendLineToRichTextBox(string text, string colorResourceKey = "", string dateTime = "")

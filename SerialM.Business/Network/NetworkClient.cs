@@ -91,6 +91,7 @@ namespace SerialM.Business.Network
                         OnClientDisconnected?.Invoke($"Disconnected : {ex.Message}");
                         break;
                     }
+                    //Task.Delay(100).Wait();
                 }
             });
         }

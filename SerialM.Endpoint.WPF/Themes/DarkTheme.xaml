@@ -18,4 +18,9 @@
     <SolidColorBrush x:Key="ListboxMouseoverBack" Color="#FF646464"/>
     <SolidColorBrush x:Key="ListboxMouseoverFill" Color="#FFC6C6C6"/>
 
+    <!--Icons-->
+    <BitmapImage  x:Key="CopyIcon"   UriSource="/Themes/Icons/copy_w.png"/>
+    <BitmapImage  x:Key="AddIcon"    UriSource="/Themes/Icons/add_w.png"/>
+    <BitmapImage  x:Key="RemoveIcon" UriSource="/Themes/Icons/bin_w.png"/>
+    
 </ResourceDictionary>

@@ -128,9 +128,15 @@
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Button x:Name="AutoRunBtn" Content="Auto Send" Click="AutoRunBtn_Click" Margin="5,0,5,0"/>
-                    <Button x:Name="AddNewSendItem" Content="New" Click="AddNewSendItem_Click" Margin="5,0,5,0"/>
-                    <Button x:Name="AddCopySendItem" Content="Copy" Click="AddCopySendItem_Click" Margin="5,0,5,0"/>
-                    <Button x:Name="RemoveBtn" Content="Remove" Click="RemoveBtn_Click" Margin="5,0,5,0"/>
+                    <Button x:Name="AddNewSendItem"  Click="AddNewSendItem_Click" Margin="5,0,5,0">
+                        <Image Source="{DynamicResource AddIcon}" Stretch="Fill"/>
+                    </Button>
+                    <Button x:Name="AddCopySendItem" Click="AddCopySendItem_Click" Margin="5,0,5,0">
+                        <Image Source="{DynamicResource CopyIcon}" Stretch="Fill"/>
+                    </Button>
+                    <Button x:Name="RemoveBtn" Click="RemoveBtn_Click" Margin="5,0,5,0">
+                        <Image Source="{DynamicResource RemoveIcon}" Stretch="Fill"/>
+                    </Button>
                 </StackPanel>
             </Grid>
 
